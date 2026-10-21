@@ -1,8 +1,11 @@
 <?php
-if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
-    header('Location: ../public/login.php');
-}
+require_once __DIR__ . '/../../app/paths.php';
 session_start();
+
+if (!isset($_SESSION['login']) || $_SESSION['login'] !== true) {
+    header('Location: ' . app_url('views/auth/login.php'));
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -11,7 +14,7 @@ session_start();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voter Dashboard</title>
-    <link rel="stylesheet" href="../public/css/app.css">
+    <link rel="stylesheet" href="<?= htmlspecialchars(app_url('public/css/app.css'), ENT_QUOTES, 'UTF-8') ?>">
 </head>
 
 <body>
@@ -19,7 +22,7 @@ session_start();
         <h1 class="text-purple-700 text-2xl">Voter Portal</h1>
         <h1 class="text-purple-700">Welcome! <?php echo $_SESSION['user_email'] ?></h1>
     </div>
-    <a href="../public/logout.php" class="p3 bg-purple-700 text-slate-50">Logout</a>
+    <a href="<?= htmlspecialchars(app_url('views/auth/logout.php'), ENT_QUOTES, 'UTF-8') ?>" class="p3 bg-purple-700 text-slate-50">Logout</a>
 </body>
 
 </html>

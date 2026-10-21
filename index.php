@@ -1,5 +1,7 @@
 
 <?php
+require_once __DIR__ . '/app/paths.php';
+
 $pageTitle = 'Online Voting System | Your Vote, Your Voice';
 ?>
 
@@ -14,7 +16,7 @@ $pageTitle = 'Online Voting System | Your Vote, Your Voice';
     <meta name="description"
           content="Register as a voter or candidate, participate in elections, and follow a transparent voting process.">
 
-    <link rel="stylesheet" href="public/css/app.css">
+    <link rel="stylesheet" href="<?= htmlspecialchars(app_url('public/css/app.css'), ENT_QUOTES, 'UTF-8') ?>">
 </head>
 
 <body class="bg-white text-slate-800 antialiased">
@@ -23,7 +25,7 @@ $pageTitle = 'Online Voting System | Your Vote, Your Voice';
 <header class="sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur">
     <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
 
-        <a href="/" class="flex items-center gap-3">
+        <a href="<?= htmlspecialchars(app_url(), ENT_QUOTES, 'UTF-8') ?>" class="flex items-center gap-3">
             <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-700 text-2xl text-white">
                 ✓
             </span>
@@ -40,12 +42,12 @@ $pageTitle = 'Online Voting System | Your Vote, Your Voice';
         </div>
 
         <div class="flex items-center gap-3">
-            <a href="public/login.php"
+            <a href="<?= htmlspecialchars(app_url('views/auth/login.php'), ENT_QUOTES, 'UTF-8') ?>"
                class="hidden rounded-full border border-slate-300 px-5 py-2.5 text-sm font-semibold hover:border-purple-600 hover:text-purple-700 sm:inline-block">
                 Login
             </a>
 
-            <a href="public/register.php"
+            <a href="<?= htmlspecialchars(app_url('views/auth/register.php'), ENT_QUOTES, 'UTF-8') ?>"
                class="rounded-full bg-purple-700 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-purple-200 transition hover:bg-purple-800">
                 Get Started
             </a>
@@ -83,13 +85,13 @@ $pageTitle = 'Online Voting System | Your Vote, Your Voice';
             </p>
 
             <div class="mt-8 flex flex-col gap-4 sm:flex-row">
-                <a href="/voter/dashboard.php"
+                <a href="<?= htmlspecialchars(app_url('views/voter/dashboard.php'), ENT_QUOTES, 'UTF-8') ?>"
                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-700 px-6 py-3.5 font-bold text-white shadow-lg shadow-purple-200 transition hover:-translate-y-0.5 hover:bg-purple-800">
                     Go to Voter Portal
                     <span aria-hidden="true">→</span>
                 </a>
 
-                <a href="candidate/registration.php"
+                <a href="<?= htmlspecialchars(app_url('views/candidate/registration.php'), ENT_QUOTES, 'UTF-8') ?>"
                    class="inline-flex items-center justify-center rounded-xl border-2 border-purple-200 bg-white px-6 py-3.5 font-bold text-purple-800 transition hover:border-purple-600 hover:bg-purple-50">
                     Register as Candidate
                 </a>
@@ -331,7 +333,7 @@ $pageTitle = 'Online Voting System | Your Vote, Your Voice';
                 <p class="mt-3 text-sm leading-7 text-slate-600">
                     Access your eligible elections, verify your token, and cast your vote.
                 </p>
-                <a href="/login.php"
+                <a href="<?= htmlspecialchars(app_url('views/auth/login.php'), ENT_QUOTES, 'UTF-8') ?>"
                    class="mt-6 inline-flex items-center gap-2 font-bold text-purple-700 hover:text-purple-900">
                     Voter Login <span aria-hidden="true">→</span>
                 </a>
@@ -345,7 +347,7 @@ $pageTitle = 'Online Voting System | Your Vote, Your Voice';
                 <p class="mt-3 text-sm leading-7 text-slate-600">
                     Submit your candidacy application and follow its approval progress.
                 </p>
-                <a href="candidate/registration.php"
+                <a href="<?= htmlspecialchars(app_url('views/candidate/registration.php'), ENT_QUOTES, 'UTF-8') ?>"
                    class="mt-6 inline-flex items-center gap-2 font-bold text-orange-600 hover:text-orange-800">
                     Candidate Registration <span aria-hidden="true">→</span>
                 </a>
@@ -359,7 +361,7 @@ $pageTitle = 'Online Voting System | Your Vote, Your Voice';
                 <p class="mt-3 text-sm leading-7 text-slate-600">
                     Authorized administrators can manage elections, applications, voters, and tokens.
                 </p>
-                <a href="/login.php"
+                <a href="<?= htmlspecialchars(app_url('views/auth/login.php'), ENT_QUOTES, 'UTF-8') ?>"
                    class="mt-6 inline-flex items-center gap-2 font-bold text-blue-700 hover:text-blue-900">
                     Admin Login <span aria-hidden="true">→</span>
                 </a>
@@ -383,12 +385,12 @@ $pageTitle = 'Online Voting System | Your Vote, Your Voice';
         </p>
 
         <div class="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
-            <a href="/login.php"
+            <a href="<?= htmlspecialchars(app_url('views/auth/login.php'), ENT_QUOTES, 'UTF-8') ?>"
                class="rounded-xl bg-white px-6 py-3.5 font-bold text-purple-800 transition hover:bg-purple-50">
                 Sign In
             </a>
 
-            <a href="/candidate/register.php"
+            <a href="<?= htmlspecialchars(app_url('views/candidate/registration.php'), ENT_QUOTES, 'UTF-8') ?>"
                class="rounded-xl bg-orange-500 px-6 py-3.5 font-bold text-white transition hover:bg-orange-600">
                 Apply as Candidate
             </a>
@@ -406,7 +408,7 @@ $pageTitle = 'Online Voting System | Your Vote, Your Voice';
         <div class="grid gap-10 md:grid-cols-3">
 
             <div>
-                <a href="/" class="text-xl font-extrabold text-white">
+                <a href="<?= htmlspecialchars(app_url(), ENT_QUOTES, 'UTF-8') ?>" class="text-xl font-extrabold text-white">
                     Online <span class="text-purple-400">Voting</span>
                 </a>
                 <p class="mt-4 max-w-sm text-sm leading-7 text-slate-400">
@@ -421,16 +423,16 @@ $pageTitle = 'Online Voting System | Your Vote, Your Voice';
                     <li><a href="#home" class="hover:text-white">Home</a></li>
                     <li><a href="#about" class="hover:text-white">About the Platform</a></li>
                     <li><a href="#how-it-works" class="hover:text-white">How It Works</a></li>
-                    <li><a href="/login.php" class="hover:text-white">Login</a></li>
+                    <li><a href="<?= htmlspecialchars(app_url('views/auth/login.php'), ENT_QUOTES, 'UTF-8') ?>" class="hover:text-white">Login</a></li>
                 </ul>
             </div>
 
             <div>
                 <h3 class="font-bold text-white">Portal Access</h3>
                 <ul class="mt-4 space-y-3 text-sm">
-                    <li><a href="/login.php" class="hover:text-white">Voter Login</a></li>
-                    <li><a href="/candidate/register.php" class="hover:text-white">Candidate Registration</a></li>
-                    <li><a href="/login.php" class="hover:text-white">Administrator Login</a></li>
+                    <li><a href="<?= htmlspecialchars(app_url('views/auth/login.php'), ENT_QUOTES, 'UTF-8') ?>" class="hover:text-white">Voter Login</a></li>
+                    <li><a href="<?= htmlspecialchars(app_url('views/candidate/registration.php'), ENT_QUOTES, 'UTF-8') ?>" class="hover:text-white">Candidate Registration</a></li>
+                    <li><a href="<?= htmlspecialchars(app_url('views/auth/login.php'), ENT_QUOTES, 'UTF-8') ?>" class="hover:text-white">Administrator Login</a></li>
                 </ul>
             </div>
 

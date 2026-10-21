@@ -1,6 +1,7 @@
 <?php
+require_once __DIR__ . '/../../app/paths.php';
 session_start();
-require_once __DIR__ . '/../app/config/database.php';
+require_once APP_ROOT . '/app/config/database.php';
 // Temporary demo values until database integration
 $candidateName = $_SESSION['user_name'] ?? 'Candidate Name';
 
@@ -55,14 +56,14 @@ $statusMessage = $statusMessages[$applicationStatus] ?? 'Your application status
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Candidate Dashboard</title>
-    <link rel="stylesheet" href="../public/css/app.css">
+    <link rel="stylesheet" href="<?= htmlspecialchars(app_url('public/css/app.css'), ENT_QUOTES, 'UTF-8') ?>">
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-800">
-    <?php include '../includes/candidate/candidate_header.php'; ?>
+    <?php include APP_ROOT . '/includes/candidate/candidate_header.php'; ?>
 
     <div class="flex min-h-[calc(100vh-65px)] flex-col md:flex-row">
-        <?php include '../includes/candidate/candidate_sidebar.php'; ?>
+        <?php include APP_ROOT . '/includes/candidate/candidate_sidebar.php'; ?>
 
         <main class="min-w-0 flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
             <div class="mx-auto max-w-5xl">
@@ -103,15 +104,15 @@ $statusMessage = $statusMessages[$applicationStatus] ?? 'Your application status
                 <section class="mt-8">
                     <h2 class="mb-4 text-lg font-bold text-slate-900">Quick Actions</h2>
                     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        <a href="profile.php" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-purple-200 hover:shadow-md">
+                        <a href="<?= htmlspecialchars(app_url('views/candidate/profile.php'), ENT_QUOTES, 'UTF-8') ?>" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-purple-200 hover:shadow-md">
                             <h3 class="font-bold text-purple-800">My Profile</h3>
                             <p class="mt-2 text-sm leading-6 text-slate-500">View or update your account information.</p>
                         </a>
-                        <a href="registration.php" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-purple-200 hover:shadow-md">
+                        <a href="<?= htmlspecialchars(app_url('views/candidate/registration.php'), ENT_QUOTES, 'UTF-8') ?>" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-purple-200 hover:shadow-md">
                             <h3 class="font-bold text-blue-700">My Applications</h3>
                             <p class="mt-2 text-sm leading-6 text-slate-500">Review your candidate application details.</p>
                         </a>
-                        <a href="elections.php" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-purple-200 hover:shadow-md">
+                        <a href="<?= htmlspecialchars(app_url('views/common/elections.php'), ENT_QUOTES, 'UTF-8') ?>" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-purple-200 hover:shadow-md">
                             <h3 class="font-bold text-green-700">Elections</h3>
                             <p class="mt-2 text-sm leading-6 text-slate-500">View available election information.</p>
                         </a>

@@ -1,6 +1,7 @@
 <?php
+require_once __DIR__ . '/../../app/paths.php';
 session_start();
-require_once __DIR__ . '/../app/config/database.php';
+require_once APP_ROOT . '/app/config/database.php';
 
 $stmt = $pdo->prepare("SELECT * FROM `elections` ORDER BY start_date ASC");
 $stmt->execute();
@@ -31,13 +32,13 @@ $formatDate = static function ($date): string {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elections | Online Voting System</title>
-    <link rel="stylesheet" href="../public/css/app.css">
+    <link rel="stylesheet" href="<?= htmlspecialchars(app_url('public/css/app.css'), ENT_QUOTES, 'UTF-8') ?>">
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-800">
-    <?php include '../includes/candidate/candidate_header.php'; ?>
+    <?php include APP_ROOT . '/includes/candidate/candidate_header.php'; ?>
     <div class="flex min-h-[calc(100vh-65px)] flex-col md:flex-row">
-        <?php include '../includes/candidate/candidate_sidebar.php'; ?>
+        <?php include APP_ROOT . '/includes/candidate/candidate_sidebar.php'; ?>
 
         <main class="min-w-0 flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
             <div class="mx-auto max-w-6xl">
@@ -133,12 +134,12 @@ $formatDate = static function ($date): string {
                                     <div class="mt-6 flex-1"></div>
                                     <div class="mt-6 border-t border-slate-100 pt-5">
                                         <?php if ($status === 'upcoming'): ?>
-                                            <a href="../candidate/registration.php" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-700 px-4 py-3 text-sm font-bold text-white transition hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-200">
+                                            <a href="<?= htmlspecialchars(app_url('views/candidate/registration.php'), ENT_QUOTES, 'UTF-8') ?>" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-700 px-4 py-3 text-sm font-bold text-white transition hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-200">
                                                 Apply for candidacy
                                                 <span aria-hidden="true">&rarr;</span>
                                             </a>
                                         <?php elseif ($status === 'completed'): ?>
-                                            <a href="results.php" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-sm font-bold text-purple-800 transition hover:bg-purple-100 focus:outline-none focus:ring-4 focus:ring-purple-100">
+                                            <a href="<?= htmlspecialchars(app_url('views/common/results.php'), ENT_QUOTES, 'UTF-8') ?>" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-sm font-bold text-purple-800 transition hover:bg-purple-100 focus:outline-none focus:ring-4 focus:ring-purple-100">
                                                 View results
                                                 <span aria-hidden="true">&rarr;</span>
                                             </a>

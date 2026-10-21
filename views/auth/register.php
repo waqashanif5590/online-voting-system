@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/../app/config/database.php';
+require_once __DIR__ . '/../../app/paths.php';
+require_once APP_ROOT . '/app/config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['name'];
@@ -45,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Account | Online Voting System</title>
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="<?= htmlspecialchars(app_url('public/css/app.css'), ENT_QUOTES, 'UTF-8') ?>">
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-800">
@@ -53,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Header -->
     <header class="border-b border-slate-200 bg-white">
         <div class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
-            <a href="../index.php" class="flex items-center gap-3">
+            <a href="<?= htmlspecialchars(app_url(), ENT_QUOTES, 'UTF-8') ?>" class="flex items-center gap-3">
                 <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-700 text-2xl font-bold text-white">✓</span>
                 <span class="text-lg font-extrabold text-slate-900">
                     Online <span class="text-purple-700">Voting</span>
@@ -62,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <p class="text-sm text-slate-600">
                 Already registered?
-                <a href="/login.php" class="font-bold text-purple-700 hover:text-purple-900">
+                <a href="<?= htmlspecialchars(app_url('views/auth/login.php'), ENT_QUOTES, 'UTF-8') ?>" class="font-bold text-purple-700 hover:text-purple-900">
                     Login
                 </a>
             </p>
@@ -138,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </p>
                     </div>
 
-                    <form action="./register.php" method="POST" id="registrationForm" class="space-y-5">
+                    <form action="<?= htmlspecialchars(app_url('views/auth/register.php'), ENT_QUOTES, 'UTF-8') ?>" method="POST" id="registrationForm" class="space-y-5">
 
                         <!-- Profile Image -->
                         <div>
@@ -355,11 +356,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <p class="mt-8 text-center text-sm text-slate-500">
             &copy; <?= date('Y') ?> Online Voting System. All rights reserved.
-            <a href="/" class="ml-1 font-semibold text-purple-700 hover:underline">Back to Home</a>
+            <a href="<?= htmlspecialchars(app_url(), ENT_QUOTES, 'UTF-8') ?>" class="ml-1 font-semibold text-purple-700 hover:underline">Back to Home</a>
         </p>
     </main>
 
-    <script src="/assets/js/register.js"></script>
+    <script src="<?= htmlspecialchars(app_url('assets/js/register.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
 
 </body>
 

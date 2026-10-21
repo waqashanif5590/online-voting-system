@@ -28,7 +28,7 @@ echo '<div class="mx-auto max-w-5xl">
                             Submitting this form does not guarantee approval.
                         </p>
                         <p class="mt-3 text-sm leading-6 text-blue-800">
-                            Need to update your account information? <a href="profile.php" class="font-semibold text-blue-900 underline decoration-blue-300 underline-offset-2 hover:text-blue-700">Go to My Profile</a>.
+                            Need to update your account information? <a href="' . htmlspecialchars(app_url('views/candidate/profile.php'), ENT_QUOTES, 'UTF-8') . '" class="font-semibold text-blue-900 underline decoration-blue-300 underline-offset-2 hover:text-blue-700">Go to My Profile</a>.
                         </p>
                         <p class="mt-2 text-sm leading-6 text-blue-800">
                             <span class="font-semibold">Please note:</span> You cannot edit application details after submission. Contact the election administrator if you need to make changes.
@@ -37,7 +37,7 @@ echo '<div class="mx-auto max-w-5xl">
                     </div>
                 </div>
 
-                <form action="registration.php" method="post" id="candidateForm" class="space-y-8">
+                <form action="' . htmlspecialchars(app_url('views/candidate/registration.php'), ENT_QUOTES, 'UTF-8') . '" method="post" id="candidateForm" class="space-y-8">
 
                     
                     <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -437,7 +437,7 @@ echo '<div class="mx-auto max-w-5xl">
 
                     <!-- Actions -->
                     <div class="flex flex-col-reverse justify-between gap-4 sm:flex-row sm:items-center">
-                        <a href="/"
+                        <a href="' . htmlspecialchars(app_url(), ENT_QUOTES, 'UTF-8') . '"
                             class="inline-flex justify-center rounded-xl border border-slate-300 bg-white px-6 py-3.5 font-semibold text-slate-700 hover:bg-slate-100">
                             Cancel
                         </a>

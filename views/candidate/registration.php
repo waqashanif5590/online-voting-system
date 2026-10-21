@@ -1,6 +1,7 @@
 <?php
+require_once __DIR__ . '/../../app/paths.php';
 session_start();
-require_once __DIR__ . '/../app/config/database.php';
+require_once APP_ROOT . '/app/config/database.php';
 
 $message = '';
 $stmt = $pdo->prepare("SELECT * FROM `candidates` WHERE user_id=?");
@@ -62,7 +63,8 @@ if ($candidate) {
             $manifesto
         ]);
         $message = "Already Registered. Please contact administrator for you queries.";
-        header('Location: registration.php?message=$message');
+        header('Location: ' . app_url('views/candidate/registration.php') . '?message=' . rawurlencode($message));
+        exit;
     }
 }
 
@@ -76,23 +78,23 @@ if ($candidate) {
 
     <title>Candidate Registration | Online Voting System</title>
 
-    <link rel="stylesheet" href="../public/css/app.css">
+    <link rel="stylesheet" href="<?= htmlspecialchars(app_url('public/css/app.css'), ENT_QUOTES, 'UTF-8') ?>">
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-800">
 
     <!-- Header -->
-    <?php include '../includes/candidate/candidate_header.php'; ?>
+    <?php include APP_ROOT . '/includes/candidate/candidate_header.php'; ?>
 
     <div class="flex min-h-[calc(100vh-65px)] flex-col md:flex-row">
-        <?php include '../includes/candidate/candidate_sidebar.php'; ?>
+        <?php include APP_ROOT . '/includes/candidate/candidate_sidebar.php'; ?>
         <main class="min-w-0 flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
 
             <?php
             if ($candidate) {
-                 include '../includes/candidate/submitted_application.php';
+                 include APP_ROOT . '/includes/candidate/submitted_application.php';
             } else {
-                include '../includes/candidate/registration_form.php';
+                include APP_ROOT . '/includes/candidate/registration_form.php';
             }
             ?>
 

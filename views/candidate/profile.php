@@ -1,12 +1,13 @@
 <?php
+require_once __DIR__ . '/../../app/paths.php';
 session_start();
 
 if (empty($_SESSION['login']) || $_SESSION['login'] !== true || empty($_SESSION['user_id'])) {
-    header('Location: ../public/login.php');
+    header('Location: ' . app_url('views/auth/login.php'));
     exit;
 }
 
-require_once __DIR__ . '/../app/config/database.php';
+require_once APP_ROOT . '/app/config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['name'] ?? '';
@@ -22,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     );
     $stmt->execute([$username, $email, $identityType, $identityNumber, $dob, $gender, $_SESSION['user_id']]);
 
-    header('Location: profile.php?success=1');
+    header('Location: ' . app_url('views/candidate/profile.php?success=1'));
     exit();
 }
 
@@ -35,12 +36,12 @@ $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$user) {
-    header('Location: ../public/login.php');
+    header('Location: ' . app_url('views/auth/login.php'));
     exit;
 }
 
 if ($user['role'] !== 'candidate') {
-    header('Location: ../public/login.php');
+    header('Location: ' . app_url('views/auth/login.php'));
     exit;
 }
 
@@ -59,13 +60,13 @@ $dateOfBirth = $user['dob'];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile | Online Voting System</title>
-    <link rel="stylesheet" href="../public/css/app.css">
+    <link rel="stylesheet" href="<?= htmlspecialchars(app_url('public/css/app.css'), ENT_QUOTES, 'UTF-8') ?>">
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-800">
-    <?php include '../includes/candidate/candidate_header.php'; ?>
+    <?php include APP_ROOT . '/includes/candidate/candidate_header.php'; ?>
     <div class="flex min-h-[calc(100vh-65px)] flex-col md:flex-row">
-        <?php include '../includes/candidate/candidate_sidebar.php'; ?>
+        <?php include APP_ROOT . '/includes/candidate/candidate_sidebar.php'; ?>
 
         <main class="min-w-0 flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
             <div class="mx-auto max-w-4xl">
@@ -79,7 +80,7 @@ $dateOfBirth = $user['dob'];
                     <div class="border-b border-slate-100 px-6 py-5 sm:px-8">
                         <h2 class="text-lg font-bold text-slate-900">Account Information</h2>
                     </div>
-                    <form action="profile.php" method="post">
+                    <form action="<?= htmlspecialchars(app_url('views/candidate/profile.php'), ENT_QUOTES, 'UTF-8') ?>" method="post">
                         <div class="grid gap-x-8 gap-y-6 p-6 sm:grid-cols-2 sm:p-8">
                             <div>
                                 <label for="fullName" class="mb-2 block text-sm font-semibold text-slate-700">Full name</label>
