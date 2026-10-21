@@ -5,7 +5,6 @@ CREATE TABLE elections (
     start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
     status ENUM('upcoming', 'ongoing', 'completed') NOT NULL DEFAULT 'upcoming',
-    is_open TINYINT NOT NULL DEFAULT (0),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -64,5 +63,31 @@ CREATE TABLE candidates (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
     FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE CASCADE,
-    FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE SET NULL
+    FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE SET NULL,
+    UNIQUE (user_id, election_id, position_id)
 );
+
+CREATE TABLE voters (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token VARCHAR(10) NOT NULL UNIQUE,
+    election_id INT NOT NULL,
+    has_voted TINYINT(1) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
+    UNIQUE (user_id, election_id)
+);
+
+CREATE TABLE votes (
+   id INT AUTO_INCREMENT PRIMARY KEY,
+   election_id INT NOT NULL,
+   candidate_id INT NOT NULL,
+   voter_id INT NOT NULL,
+   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
+   FOREIGN KEY (candidate_id) REFERENCES candidates(id) ON DELETE CASCADE,
+   FOREIGN KEY (voter_id) REFERENCES voters(id) ON DELETE CASCADE,
+   UNIQUE (voter_id, election_id, position_id)
+)

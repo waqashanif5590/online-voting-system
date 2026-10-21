@@ -4,14 +4,26 @@ require_once __DIR__ . '/../app/config/database.php';
 // Temporary demo values until database integration
 $candidateName = $_SESSION['user_name'] ?? 'Candidate Name';
 
-$stmt = $pdo->prepare("SELECT * FROM `candidates` WHERE user_id = ?");
+$stmt = $pdo->prepare("
+    SELECT
+        candidates.*,
+        elections.title AS election_name,
+        positions.title AS position_name
+    FROM candidates
+    INNER JOIN elections
+        ON candidates.election_id = elections.id
+    INNER JOIN positions
+        ON candidates.position_id = positions.id
+        WHERE candidates.user_id = ?
+");
+
 $stmt->execute([$_SESSION['user_id']]);
 $candidate = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if ($candidate) {
-    $applicationStatus = $candidate['status'];
-    $electionName = $candidate['election_id'] ?? 'N/A';
-    $position = $candidate['position_id'] ?? 'N/A';
+    $applicationStatus = $candidate['status'] ?? 'incomplete';
+    $electionName = $candidate['election_name'] ?? 'N/A';
+    $position = $candidate['position_name'] ?? 'N/A';
 } else {
     $applicationStatus = 'incomplete';
     $electionName = 'N/A';
@@ -33,6 +45,7 @@ $statusMessages = [
 ];
 
 $statusClass = $statusColors[$applicationStatus] ?? 'bg-gray-100 text-gray-700';
+$statusMessage = $statusMessages[$applicationStatus] ?? 'Your application status is currently unavailable.';
 ?>
 
 <!DOCTYPE html>
@@ -68,7 +81,7 @@ $statusClass = $statusColors[$applicationStatus] ?? 'bg-gray-100 text-gray-700';
                             <?= ucfirst(htmlspecialchars($applicationStatus, ENT_QUOTES, 'UTF-8')) ?>
                         </span>
                         <p class="mt-4 text-sm leading-6 text-slate-600">
-                            <?= htmlspecialchars($statusMessages[$applicationStatus]) ?>
+                            <?= htmlspecialchars($statusMessage, ENT_QUOTES, 'UTF-8') ?>
                         </p>
                     </section>
 
