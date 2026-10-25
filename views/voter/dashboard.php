@@ -1,3 +1,50 @@
+<?php
+require_once __DIR__ . '/../../app/paths.php';
+session_start();
+require_once APP_ROOT . '/app/config/database.php';
+
+$stmt = $pdo->prepare("SELECT * FROM users WHERE id=?");
+$stmt->execute([$_SESSION['user_id']]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
+$username = explode(' ', $user['name'], 2);
+$firstname = $username[0];
+$lastname = $username[1];
+$username = ucfirst($firstname) . ' ' . ucfirst($lastname);
+
+$stmt = $pdo->prepare("SELECT voters.token AS token_number,
+                    voters.has_voted AS token_status,
+                    voters.casted_at AS vote_date,
+                    elections.title AS election,
+                    elections.start_date AS election_start_date,
+                    elections.end_date AS election_end_date,
+                    elections.status AS election_status
+                    FROM voters
+                    INNER JOIN elections ON voters.election_id=elections.id
+                    WHERE user_id=?
+                    ");
+$stmt->execute([$_SESSION['user_id']]);
+$voter_data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+$stmt = $pdo->prepare("SELECT
+                voters.has_voted AS token_status,
+                voters.casted_at AS vote_date,
+                elections.title AS election
+                FROM voters
+                INNER JOIN elections
+                    ON voters.election_id = elections.id
+                WHERE voters.user_id = ?
+                AND elections.status = 'completed'
+                ORDER BY elections.end_date DESC
+                ");
+
+$stmt->execute([$_SESSION['user_id']]);
+$votingHistory = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$statusColors = [
+    true => 'bg-green-50 text-green-700',
+    false => 'bg-orange-50 text-orange-700'
+];
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -59,10 +106,10 @@
                     <p class="text-sm text-slate-500">Voter Portal <span class="mx-2 text-slate-300">/</span> Dashboard</p>
                     <div class="flex items-center gap-3">
                         <div class="hidden text-right sm:block">
-                            <p class="text-sm font-semibold text-slate-800">John Anderson</p>
+                            <p class="text-sm font-semibold text-slate-800"><?= $username ?></p>
                             <p class="text-xs text-slate-500">Voter account</p>
                         </div>
-                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700" aria-label="John Anderson">JA</div>
+                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700" aria-label="John Anderson"><?= strtoupper($firstname[0] . $lastname[0]) ?></div>
                     </div>
                 </div>
             </header>
@@ -70,8 +117,8 @@
             <main id="dashboard" class="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
                 <section class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                     <div>
-                        <p class="mb-2 text-sm font-medium text-purple-700">Thursday, October 22, 2026</p>
-                        <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Welcome back, John!</h1>
+                        <p class="mb-2 text-sm font-medium text-purple-700"><?= date('l, F d, Y') ?></p>
+                        <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Welcome back, <?= ucfirst($firstname) ?>!</h1>
                         <p class="mt-2 text-sm text-slate-500 sm:text-base">Here’s what’s happening with your vote today.</p>
                     </div>
                     <span class="inline-flex w-fit items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700">
@@ -98,29 +145,40 @@
                     <div class="grid gap-5 border-t border-slate-100 pt-5 sm:grid-cols-3 sm:gap-4">
                         <div>
                             <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Full name</p>
-                            <p class="mt-1.5 text-sm font-semibold text-slate-800">John Anderson</p>
+                            <p class="mt-1.5 text-sm font-semibold text-slate-800"><?= $username ?></p>
                         </div>
                         <div>
                             <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Email address</p>
-                            <p class="mt-1.5 break-all text-sm font-semibold text-slate-800">john.anderson@example.com</p>
+                            <p class="mt-1.5 break-all text-sm font-semibold text-slate-800"><?= $user['email'] ?></p>
                         </div>
                         <div>
                             <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Identity Number</p>
-                            <p class="mt-1.5 font-mono text-sm font-semibold tracking-wider text-purple-700">3320456347769</p>
+                            <p class="mt-1.5 font-mono text-sm font-semibold tracking-wider text-purple-700"><?= $user['identity_number'] ?></p>
                         </div>
                     </div>
                 </section>
 
                 <div class="grid gap-6 xl:grid-cols-5">
+
                     <section id="elections" aria-labelledby="election-title" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 xl:col-span-3">
-                        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+                        <?php
+                        if (empty($voter_data)) {
+                            echo '
+                         <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
                             <div>
                                 <p class="text-xs font-semibold uppercase tracking-wider text-purple-700">Token Assigned for</p>
-                                <h2 id="election-title" class="mt-1 text-lg font-bold text-slate-900">Community Council Election 2026</h2>
+                                <h2 id="election-title" class="mt-1 text-lg font-bold text-slate-900">No token number is assigned for casting a vote</h2>
+                            </div>  
+                        </div>';
+                        } else {
+                            echo '  <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-wider text-purple-700">Token Assigned for</p>
+                                <h2 id="election-title" class="mt-1 text-lg font-bold text-slate-900">' . $voter_data['election'] . '</h2>
                             </div>
                             <span class="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700">
                                 <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
-                                Ongoing
+                                ' . ucfirst($voter_data['election_status']) . '
                             </span>
                         </div>
                         <p class="max-w-2xl text-sm leading-6 text-slate-500">Choose the representatives who will help guide our community. Review the candidates and make your voice heard before polls close.</p>
@@ -133,7 +191,9 @@
                                 </span>
                                 <div>
                                     <p class="text-xs text-slate-400">Voting starts</p>
-                                    <p class="text-sm font-semibold text-slate-700">October 20, 2026</p>
+                                    <p class="text-sm font-semibold text-slate-700">'
+                                . date('F d, Y - h:i A', strtotime($voter_data['election_start_date'])) .
+                                '</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-3">
@@ -145,16 +205,28 @@
                                 </span>
                                 <div>
                                     <p class="text-xs text-slate-400">Voting ends</p>
-                                    <p class="text-sm font-semibold text-slate-700">October 30, 2026</p>
+                                    <p class="text-sm font-semibold text-slate-700">'
+                                . date('F d, Y - h:i A', strtotime($voter_data['election_end_date'])) .
+                                '</p>
                                 </div>
                             </div>
-                        </div>
+                        </div>';
+                        } ?>
                     </section>
 
                     <section aria-labelledby="token-title"
                         class="flex flex-col rounded-2xl border border-purple-100 bg-purple-50/70 p-5 shadow-sm sm:p-6 xl:col-span-2">
+                        <?php
+                        if (empty($voter_data)) {
+                            echo ' <h2 id="token-title" class="text-lg font-bold text-slate-900">
+                            Your Voting Token
+                        </h2>
 
-                        <span class="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-white text-purple-700 shadow-sm">
+                        <p class="mt-2 text-sm leading-6 text-slate-600">
+                            No token number assigned for casting a vote
+                        </p>';
+                        } else {
+                            echo '  <span class="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-white text-purple-700 shadow-sm">
                             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none"
                                 stroke="currentColor" stroke-width="1.8">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -176,7 +248,9 @@
                                 Token Number
                             </p>
                             <p class="mt-2 font-mono text-2xl font-bold tracking-widest text-purple-700">
-                                48291736
+                                 '
+                                . $voter_data['token_number'] .
+                                '
                             </p>
                         </div>
 
@@ -198,7 +272,7 @@
                             </div>
                         </div>
 
-                        <a href="#vote"
+                        <a href="./cast_vote.php?token=' . $voter_data['token_number'] . '"
                             class="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-purple-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
                             Cast Vote
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none"
@@ -209,9 +283,10 @@
                         </a>
 
                         <p class="mt-3 text-center text-xs text-slate-500">
-                            Sample interface only
-                        </p>
-
+                            This token number can be used only once.
+                        </p>';
+                        }
+                        ?>
                     </section>
                 </div>
 
@@ -221,7 +296,8 @@
                             <h2 id="history-title" class="font-bold text-slate-900">Voting history</h2>
                             <p class="mt-1 text-sm text-slate-500">A record of your past participation</p>
                         </div>
-                        <span class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">2 elections</span>
+                        <span class="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                            <?= count($votingHistory) ?> elections</span>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full min-w-[520px] text-left text-sm">
@@ -233,16 +309,26 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
-                                <tr>
-                                    <td class="px-5 py-4 font-medium text-slate-700 sm:px-6">Neighborhood Board Election</td>
-                                    <td class="whitespace-nowrap px-5 py-4 text-slate-500">June 14, 2026</td>
-                                    <td class="px-5 py-4 sm:px-6"><span class="inline-flex rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">Voted</span></td>
-                                </tr>
-                                <tr>
-                                    <td class="px-5 py-4 font-medium text-slate-700 sm:px-6">Community Budget Poll</td>
-                                    <td class="whitespace-nowrap px-5 py-4 text-slate-500">March 02, 2026</td>
-                                    <td class="px-5 py-4 sm:px-6"><span class="inline-flex rounded-full bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-700">Not participated</span></td>
-                                </tr>
+                                <?php
+
+                                if (empty($votingHistory)) {
+                                    echo '<tr>
+                                    <td class="px-5 py-4 font-medium text-slate-700 sm:px-6">No elections found in history</td>
+                                </tr>';
+                                } else {
+                                    echo '  <tr>
+                                    <td class="px-5 py-4 font-medium text-slate-700 sm:px-6">
+                                    ' . $votingHistory['election'] . '</td>
+                                    <td class="whitespace-nowrap px-5 py-4 text-slate-500">'
+                                        . date('F d, Y - h:i A', strtotime($votingHistory['vote_date'])) .
+                                        '</td>
+                                    <td class="px-5 py-4 sm:px-6"><span class="inline-flex rounded-full'
+                                        . $statusColors[$votingHistory['token_status']] . ' px-2.5 py-1 text-xs font-semibold">'
+                                        . $votingHistory['token_status'] == true ? 'Voted' : 'Not Participated' .
+                                        '</span></td>
+                                </tr>';
+                                }
+                                ?>
                             </tbody>
                         </table>
                     </div>

@@ -29,10 +29,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $election = $_POST['election'];
     $token = $_POST['token'];
 
-    $stmt = $pdo->prepare("INSERT INTO voters (user_id, token, election_id) VALUES (?,?,?)");
-    $insertion = $stmt->execute([$voter, $token, $election]);
-    if ($insertion) {
-        echo "<script>alert('Token Assigned to voter')</script>";
+    $stmt = $pdo->prepare("SELECT * FROM voters WHERE user_id=? AND election_id=?");
+    $stmt->execute([$voter, $election]);
+    $assigned_token = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($assigned_token) {
+        echo "<script>alert('Token already assigned')</script>";
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO voters (user_id, token, election_id) VALUES (?,?,?)");
+        $insertion = $stmt->execute([$voter, $token, $election]);
+        if ($insertion) {
+            echo "<script>alert('Token Assigned to voter')</script>";
+        }
     }
 }
 
