@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../app/paths.php';
 session_start();
 require_once APP_ROOT . '/app/config/database.php';
+require_once APP_ROOT . '/views/auth/check_auth.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -14,155 +15,18 @@ require_once APP_ROOT . '/app/config/database.php';
     <link rel="stylesheet" href="../../public/css/app.css">
 </head>
 
-<body class="min-h-screen bg-slate-100 text-slate-800 antialiased">
-    <div class="min-h-screen md:flex">
-        <aside class="bg-purple-950 text-purple-100 md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
-            <div class="flex items-center gap-3 border-b border-white/10 px-5 py-5 md:px-6">
-                <span
-                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500 text-xl font-extrabold text-white"
-                    aria-hidden="true">V</span>
-                <div>
-                    <p class="font-extrabold tracking-tight text-white">Vote<span class="text-orange-400">System</span>
-                    </p>
-                    <p class="text-xs text-purple-300">Administration</p>
-                </div>
-            </div>
+<body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
+    <div class="flex min-h-screen flex-col md:flex-row">
+        <?php $portalRole = 'admin'; include APP_ROOT . '/includes/shared/portal_sidebar.php'; ?>
+        <div class="min-w-0 flex-1">
+            <?php
+            $pageTitle = 'Admin Dashboard';
+            $pageDescription = 'Monitor elections, voter activity, and candidate applications.';
+            include APP_ROOT . '/includes/shared/portal_header.php';
+            ?>
+            <main id="dashboard" class="min-w-0 flex-1">
+                <div class="mx-auto max-w-7xl space-y-7 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
 
-            <nav aria-label="Admin navigation" class="overflow-x-auto px-3 py-4 md:flex-1 md:overflow-x-hidden md:overflow-y-auto">
-                <p class="hidden px-3 pb-3 text-xs font-bold uppercase tracking-widest text-purple-400 md:block">
-                    Workspace</p>
-                <ul class="flex w-max gap-1 md:w-auto md:flex-col">
-                    <li>
-                        <a href="#dashboard" aria-current="page"
-                            class="flex items-center gap-3 rounded-xl bg-white/10 px-3 py-2.5 text-sm font-semibold text-white ring-1 ring-inset ring-white/10">
-                            <svg class="h-5 w-5 shrink-0 text-orange-300" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                <rect x="3" y="3" width="8" height="8" rx="2" />
-                                <rect x="13" y="3" width="8" height="5" rx="2" />
-                                <rect x="13" y="10" width="8" height="11" rx="2" />
-                                <rect x="3" y="13" width="8" height="8" rx="2" />
-                            </svg>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    <li><a href="#elections"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <rect x="3" y="5" width="18" height="16" rx="2" />
-                                <path stroke-linecap="round" d="M16 3v4M8 3v4M3 10h18" />
-                            </svg><span>Elections</span></a></li>
-                    <li><a href="#voters"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <path stroke-linecap="round"
-                                    d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM20 8v6m3-3h-6" />
-                            </svg><span>Voters</span></a></li>
-                    <li><a href="#candidates"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <circle cx="12" cy="8" r="4" />
-                                <path stroke-linecap="round" d="M5 21v-2a7 7 0 0 1 14 0v2M19 8h3m-1.5-1.5v3" />
-                            </svg><span>Candidates</span></a></li>
-                    <li><a href="#applications"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <path stroke-linecap="round" d="M14 2v6h6M8 13h8M8 17h8" />
-                            </svg><span>Candidate Applications</span></a></li>
-                    <li><a href="#positions"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="m19.4 15 .1.1a2 2 0 1 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4v.3a2 2 0 1 1-4 0v-.2A2 2 0 0 0 5.8 17l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a2 2 0 0 0-1.4-3.4h-.3a2 2 0 1 1 0-4h.2A2 2 0 0 0 3 4.2l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a2 2 0 0 0 3.4-1.4v-.3a2 2 0 1 1 4 0v.2A2 2 0 0 0 17.2 1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a2 2 0 0 0 1.4 3.4h.3a2 2 0 1 1 0 4h-.2a2 2 0 0 0-2.1 3.8Z"
-                                    transform="translate(1 2) scale(.9)" />
-                            </svg><span>Positions</span></a></li>
-                    <li><a href="#parties"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M12 3 3 8l9 5 9-5-9-5ZM3 12l9 5 9-5M3 16l9 5 9-5" />
-                            </svg><span>Political Parties</span></a></li>
-                    <li><a href="#election-results"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M4 19V5m0 14h17M8 15v-4m5 4V7m5 8v-6" />
-                            </svg><span>Election Results</span></a></li>
-                    <li><a href="#settings"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <circle cx="12" cy="12" r="3" />
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="m19.4 15 .1.1a2 2 0 1 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4v.3a2 2 0 1 1-4 0v-.2A2 2 0 0 0 5.8 17l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a2 2 0 0 0-1.4-3.4h-.3a2 2 0 1 1 0-4h.2A2 2 0 0 0 3 4.2l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a2 2 0 0 0 3.4-1.4v-.3a2 2 0 1 1 4 0v.2A2 2 0 0 0 17.2 1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a2 2 0 0 0 1.4 3.4h.3a2 2 0 1 1 0 4h-.2a2 2 0 0 0-1.6 2.3Z"
-                                    transform="translate(1 2) scale(.9)" />
-                            </svg><span>Settings</span></a></li>
-                    <li class="md:hidden"><a href="#"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9" />
-                            </svg><span>Logout</span></a></li>
-                </ul>
-            </nav>
-
-            <div class="hidden border-t border-white/10 p-3 md:block">
-                <a href="#"
-                    class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                    <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="1.8" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9" />
-                    </svg>
-                    <span>Logout</span>
-                </a>
-            </div>
-        </aside>
-
-        <main id="dashboard" class="min-w-0 flex-1 md:ml-64">
-            <header class="border-b border-slate-200 bg-white">
-                <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-                    <div>
-                        <p class="text-sm font-medium text-slate-500">Overview</p>
-                        <h1 class="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">Admin Dashboard
-                        </h1>
-                    </div>
-                    <div class="flex items-center gap-3 sm:gap-5">
-                        <button type="button" aria-label="Notifications"
-                            class="relative rounded-xl border border-slate-200 p-2.5 text-slate-500 transition hover:bg-slate-50">
-                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />
-                            </svg>
-                            <span
-                                class="absolute right-2 top-2 h-2 w-2 rounded-full bg-orange-500 ring-2 ring-white"></span>
-                        </button>
-                        <div class="hidden h-9 border-l border-slate-200 sm:block"></div>
-                        <div class="flex items-center gap-3">
-                            <span
-                                class="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-800">AD</span>
-                            <div class="hidden sm:block">
-                                <p class="text-sm font-bold text-slate-800">Alex Morgan</p>
-                                <p class="text-xs text-slate-500">Administrator</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <div class="mx-auto max-w-7xl space-y-7 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
                 <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                     <div>
                         <h2 class="text-2xl font-extrabold tracking-tight text-slate-900">Welcome back, Administrator
@@ -499,8 +363,9 @@ require_once APP_ROOT . '/app/config/database.php';
                     <p>© 2026 VoteSystem. Admin dashboard preview.</p>
                     <p>Static interface · Sample data only</p>
                 </footer>
-            </div>
-        </main>
+                </div>
+            </main>
+        </div>
     </div>
 </body>
 

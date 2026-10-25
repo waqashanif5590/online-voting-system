@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../app/paths.php';
 session_start();
+require_once APP_ROOT . '/views/auth/check_auth.php';
 
 if (empty($_SESSION['login']) || $_SESSION['login'] !== true || empty($_SESSION['user_id'])) {
     header('Location: ' . app_url('views/auth/login.php'));
@@ -52,6 +53,9 @@ $identityType = [
 ][$user['identity_type']] ?? ucfirst($user['identity_type']);
 $gender = ucfirst($user['gender']);
 $dateOfBirth = $user['dob'];
+$portalRole = 'candidate';
+$pageTitle = 'My Profile';
+$pageDescription = 'Review and update the personal details associated with your candidate account.';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -64,18 +68,12 @@ $dateOfBirth = $user['dob'];
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-800">
-    <?php include APP_ROOT . '/includes/candidate/candidate_header.php'; ?>
     <div class="flex min-h-[calc(100vh-65px)] flex-col md:flex-row">
         <?php include APP_ROOT . '/includes/candidate/candidate_sidebar.php'; ?>
-
-        <main class="min-w-0 flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
+        <div class="min-w-0 flex-1">
+            <?php include APP_ROOT . '/includes/candidate/candidate_header.php'; ?>
+            <main class="min-w-0 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
             <div class="mx-auto max-w-4xl">
-                <div class="mb-8">
-                <p class="text-sm font-bold uppercase tracking-widest text-purple-700">Candidate Account</p>
-                <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">My Profile</h1>
-                <p class="mt-3 text-slate-600">Your details from account registration.</p>
-                </div>
-
                 <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                     <div class="border-b border-slate-100 px-6 py-5 sm:px-8">
                         <h2 class="text-lg font-bold text-slate-900">Account Information</h2>
@@ -129,7 +127,8 @@ $dateOfBirth = $user['dob'];
                     </form>
                 </section>
             </div>
-        </main>
+            </main>
+        </div>
     </div>
 </body>
 

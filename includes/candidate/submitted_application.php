@@ -36,12 +36,6 @@ $submittedAt = !empty($application['created_at'])
 ?>
 
 <div class="mx-auto max-w-5xl">
-    <div class="mb-8">
-        <p class="text-sm font-bold uppercase tracking-widest text-purple-700">Candidate Portal</p>
-        <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Submitted Application</h1>
-        <p class="mt-3 text-slate-600">Review the details you submitted for your candidacy.</p>
-    </div>
-
     <section class="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>

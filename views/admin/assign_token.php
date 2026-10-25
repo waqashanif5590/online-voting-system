@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../app/paths.php';
 session_start();
 require_once APP_ROOT . '/app/config/database.php';
+require_once APP_ROOT . '/views/auth/check_auth.php';
 if (isset($_GET['user'])) {
     $stmt = $pdo->prepare("SELECT * FROM users WHERE id=?");
     $stmt->execute([$_GET['user']]);
@@ -55,150 +56,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link rel="stylesheet" href="../../public/css/app.css">
 </head>
 
-<body class="min-h-screen bg-slate-100 text-slate-800 antialiased">
-    <div class="min-h-screen md:flex">
-        <aside class="bg-purple-950 text-purple-100 md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
-            <div class="flex items-center gap-3 border-b border-white/10 px-5 py-5 md:px-6">
-                <span
-                    class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500 text-xl font-extrabold text-white"
-                    aria-hidden="true">V</span>
-                <div>
-                    <p class="font-extrabold tracking-tight text-white">Vote<span class="text-orange-400">System</span>
-                    </p>
-                    <p class="text-xs text-purple-300">Administration</p>
-                </div>
-            </div>
+<body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
+    <div class="flex min-h-screen flex-col md:flex-row">
+        <?php $portalRole = 'admin'; include APP_ROOT . '/includes/shared/portal_sidebar.php'; ?>
+        <div class="min-w-0 flex-1">
+            <?php
+            $pageTitle = 'Assign Voting Token';
+            $pageDescription = 'Generate a unique voting token and assign it to a voter for a selected election.';
+            include APP_ROOT . '/includes/shared/portal_header.php';
+            ?>
+            <main class="min-w-0 flex-1">
+                <div class="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+                    <a href="dashboard.php#voters" class="inline-flex items-center gap-2 text-sm font-semibold text-purple-700 hover:text-purple-900">&larr; Back to Voters</a>
 
-            <nav aria-label="Admin navigation"
-                class="overflow-x-auto px-3 py-4 md:flex-1 md:overflow-x-hidden md:overflow-y-auto">
-                <p class="hidden px-3 pb-3 text-xs font-bold uppercase tracking-widest text-purple-400 md:block">
-                    Workspace</p>
-                <ul class="flex w-max gap-1 md:w-auto md:flex-col">
-                    <li><a href="dashboard.php#dashboard"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <rect x="3" y="3" width="8" height="8" rx="2" />
-                                <rect x="13" y="3" width="8" height="5" rx="2" />
-                                <rect x="13" y="10" width="8" height="11" rx="2" />
-                                <rect x="3" y="13" width="8" height="8" rx="2" />
-                            </svg><span>Dashboard</span></a></li>
-                    <li><a href="dashboard.php#elections"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <rect x="3" y="5" width="18" height="16" rx="2" />
-                                <path stroke-linecap="round" d="M16 3v4M8 3v4M3 10h18" />
-                            </svg><span>Elections</span></a></li>
-                    <li><a href="dashboard.php#voters" aria-current="page"
-                            class="flex items-center gap-3 rounded-xl bg-white/10 px-3 py-2.5 text-sm font-semibold text-white ring-1 ring-inset ring-white/10">
-                            <svg class="h-5 w-5 shrink-0 text-orange-300" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                <path stroke-linecap="round"
-                                    d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM20 8v6m3-3h-6" />
-                            </svg><span>Voters</span></a></li>
-                    <li><a href="dashboard.php#candidates"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <circle cx="12" cy="8" r="4" />
-                                <path stroke-linecap="round" d="M5 21v-2a7 7 0 0 1 14 0v2M19 8h3m-1.5-1.5v3" />
-                            </svg><span>Candidates</span></a></li>
-                    <li><a href="dashboard.php#applications"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <path stroke-linecap="round" d="M14 2v6h6M8 13h8M8 17h8" />
-                            </svg><span>Candidate Applications</span></a></li>
-                    <li><a href="dashboard.php#positions"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <circle cx="12" cy="12" r="3" />
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="m19.4 15 .1.1a2 2 0 1 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4v.3a2 2 0 1 1-4 0v-.2A2 2 0 0 0 5.8 17l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a2 2 0 0 0-1.4-3.4h-.3a2 2 0 1 1 0-4h.2A2 2 0 0 0 3 4.2l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a2 2 0 0 0 3.4-1.4v-.3a2 2 0 1 1 4 0v.2A2 2 0 0 0 17.2 1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a2 2 0 0 0 1.4 3.4h.3a2 2 0 1 1 0 4h-.2a2 2 0 0 0-2.1 3.8Z"
-                                    transform="translate(1 2) scale(.9)" />
-                            </svg><span>Positions</span></a></li>
-                    <li><a href="dashboard.php#parties"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M12 3 3 8l9 5 9-5-9-5ZM3 12l9 5 9-5M3 16l9 5 9-5" />
-                            </svg><span>Political Parties</span></a></li>
-                    <li><a href="dashboard.php#election-results"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M4 19V5m0 14h17M8 15v-4m5 4V7m5 8v-6" />
-                            </svg><span>Election Results</span></a></li>
-                    <li><a href="dashboard.php#settings"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <circle cx="12" cy="12" r="3" />
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="m19.4 15 .1.1a2 2 0 1 1-2.8 2.8l-.1-.1a2 2 0 0 0-3.4 1.4v.3a2 2 0 1 1-4 0v-.2A2 2 0 0 0 5.8 17l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a2 2 0 0 0-1.4-3.4h-.3a2 2 0 1 1 0-4h.2A2 2 0 0 0 3 4.2l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a2 2 0 0 0 3.4-1.4v-.3a2 2 0 1 1 4 0v.2A2 2 0 0 0 17.2 1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a2 2 0 0 0 1.4 3.4h.3a2 2 0 1 1 0 4h-.2a2 2 0 0 0-1.6 2.3Z"
-                                    transform="translate(1 2) scale(.9)" />
-                            </svg><span>Settings</span></a></li>
-                    <li class="md:hidden"><a href="#"
-                            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9" />
-                            </svg><span>Logout</span></a></li>
-                </ul>
-            </nav>
-
-            <div class="hidden border-t border-white/10 p-3 md:block">
-                <a href="#"
-                    class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-purple-200 transition hover:bg-white/10 hover:text-white">
-                    <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="1.8" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9" />
-                    </svg>
-                    <span>Logout</span>
-                </a>
-            </div>
-        </aside>
-
-        <main class="min-w-0 flex-1 md:ml-64">
-            <header class="border-b border-slate-200 bg-white">
-                <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
-                    <nav aria-label="Breadcrumb" class="text-sm">
-                        <ol class="flex flex-wrap items-center gap-2 text-slate-500">
-                            <li><a href="dashboard.php#dashboard" class="hover:text-purple-700">Dashboard</a></li>
-                            <li aria-hidden="true"><span>/</span></li>
-                            <li><a href="dashboard.php#voters" class="hover:text-purple-700">Voters</a></li>
-                            <li aria-hidden="true"><span>/</span></li>
-                            <li class="font-semibold text-slate-800" aria-current="page">Assign Token</li>
-                        </ol>
-                    </nav>
-                    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-                        <div>
-                            <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">Assign Voting
-                                Token</h1>
-                            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500">Generate a unique voting token
-                                and assign it to a voter for a selected election.</p>
-                        </div>
-                        <a href="dashboard.php#voters"
-                            class="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-purple-100 sm:self-auto">
-                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m15 18-6-6 6-6M9 12h12" />
-                            </svg>
-                            Back to Voters
-                        </a>
-                    </div>
-                </div>
-            </header>
-
-            <div class="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
                 <form action="./assign_token.php?user=<?= $_GET['user'] ?>" method="post" class="grid gap-6 lg:grid-cols-2 lg:items-start">
                     <div class="space-y-6">
                         <section aria-labelledby="voter-heading"
@@ -340,8 +210,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         </aside>
                     </div>
                 </form>
-            </div>
-        </main>
+                </div>
+            </main>
+        </div>
     </div>
 </body>
 

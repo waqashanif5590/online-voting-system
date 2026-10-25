@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../app/paths.php';
 session_start();
 require_once APP_ROOT . '/app/config/database.php';
+require_once APP_ROOT . '/views/auth/check_auth.php';
 
 $stmt = $pdo->prepare("SELECT * FROM `elections` ORDER BY start_date ASC");
 $stmt->execute();
@@ -24,6 +25,9 @@ $formatDate = static function ($date): string {
     $timestamp = strtotime($date);
     return $timestamp === false ? 'Date unavailable' : date('M j, Y', $timestamp);
 };
+$portalRole = $_SESSION['user_role'] ?? '';
+$pageTitle = 'Elections';
+$pageDescription = 'Explore election schedules and check the current status of each election.';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -36,26 +40,13 @@ $formatDate = static function ($date): string {
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-800">
-    <?php include APP_ROOT . '/includes/candidate/candidate_header.php'; ?>
     <div class="flex min-h-[calc(100vh-65px)] flex-col md:flex-row">
-        <?php include APP_ROOT . '/includes/candidate/candidate_sidebar.php'; ?>
-
-        <main class="min-w-0 flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
+        <?php include APP_ROOT . '/includes/shared/portal_sidebar.php'; ?>
+        <div class="min-w-0 flex-1">
+            <?php include APP_ROOT . '/includes/shared/portal_header.php'; ?>
+            <main class="min-w-0 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
             <div class="mx-auto max-w-6xl">
-                <header class="mb-8 rounded-3xl bg-gradient-to-br from-purple-800 via-purple-700 to-indigo-700 px-6 py-8 text-white shadow-lg shadow-purple-900/10 sm:px-9 sm:py-10">
-                    <p class="text-sm font-bold uppercase tracking-[0.18em] text-purple-200">Candidate Portal</p>
-                    <div class="mt-3 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-                        <div>
-                            <h1 class="text-3xl font-extrabold tracking-tight sm:text-4xl">Elections</h1>
-                            <p class="mt-3 max-w-2xl leading-7 text-purple-100">
-                                Explore election schedules and check the current status of each election.
-                            </p>
-                        </div>
-                        <p class="shrink-0 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold">
-                            <?= count($elections) ?> <?= count($elections) === 1 ? 'election' : 'elections' ?> listed
-                        </p>
-                    </div>
-                </header>
+                <p class="mb-8 text-sm font-semibold text-slate-500"><?= count($elections) ?> <?= count($elections) === 1 ? 'election' : 'elections' ?> listed</p>
 
                 <section aria-label="Election status summary" class="mb-8 grid gap-4 sm:grid-cols-3">
                     <?php foreach ([
@@ -155,7 +146,8 @@ $formatDate = static function ($date): string {
                     </section>
                 <?php endif; ?>
             </div>
-        </main>
+            </main>
+        </div>
     </div>
 </body>
 

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../app/paths.php';
 session_start();
 require_once APP_ROOT . '/app/config/database.php';
+require_once APP_ROOT . '/views/auth/check_auth.php';
 
 $message = '';
 $stmt = $pdo->prepare("SELECT * FROM `candidates` WHERE user_id=?");
@@ -69,6 +70,13 @@ if ($candidate) {
 }
 
 ?>
+<?php
+$portalRole = 'candidate';
+$pageTitle = $candidate ? 'Submitted Application' : 'Candidate Registration';
+$pageDescription = $candidate
+    ? 'Review the details you submitted for your candidacy.'
+    : 'Complete the information required for your candidate application.';
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -82,13 +90,11 @@ if ($candidate) {
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-800">
-
-    <!-- Header -->
-    <?php include APP_ROOT . '/includes/candidate/candidate_header.php'; ?>
-
     <div class="flex min-h-[calc(100vh-65px)] flex-col md:flex-row">
         <?php include APP_ROOT . '/includes/candidate/candidate_sidebar.php'; ?>
-        <main class="min-w-0 flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
+        <div class="min-w-0 flex-1">
+            <?php include APP_ROOT . '/includes/candidate/candidate_header.php'; ?>
+            <main class="min-w-0 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
 
             <?php
             if ($candidate) {
@@ -98,7 +104,8 @@ if ($candidate) {
             }
             ?>
 
-        </main>
+            </main>
+        </div>
     </div>
 
 

@@ -1,21 +1,5 @@
 <?php
 echo '<div class="mx-auto max-w-5xl">
-                <div class="mb-8">
-                    <div class="mb-3 inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1.5 text-xs font-bold text-orange-700">
-                        <span class="h-2 w-2 rounded-full bg-orange-500"></span>
-                        CANDIDATE APPLICATION
-                    </div>
-
-                    <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-                        Complete Your Candidate Profile
-                    </h1>
-
-                    <p class="mt-3 max-w-2xl leading-7 text-slate-600">
-                        Provide the information required for your candidacy application.
-                        An administrator will review your details before approving your participation in an election.
-                    </p>
-                </div>
-
                 <div class="mb-8 flex items-start gap-4 rounded-2xl border border-blue-200 bg-blue-50 p-5">
                     <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-xl font-bold text-blue-700">
                         i

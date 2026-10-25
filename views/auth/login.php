@@ -18,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_email'] = $user['email'];
             $_SESSION['user_name'] = $user['name'];
+            $_SESSION['user_role'] = $user['role'];
             if ($user['role'] === 'voter') {
                 header('Location: ' . app_url('views/voter/dashboard.php'));
                 exit;

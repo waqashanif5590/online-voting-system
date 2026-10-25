@@ -2,11 +2,7 @@
 require_once __DIR__ . '/../../app/paths.php';
 session_start();
 require_once APP_ROOT . '/app/config/database.php';
-
-if (!isset($_SESSION['user_id'])) {
-    http_response_code(401);
-    exit('Authentication required.');
-}
+require_once APP_ROOT . '/views/auth/check_auth.php';
 
 if (isset($_GET['token'])) {
     $stmt = $pdo->prepare("SELECT * FROM voters WHERE token = ?");
@@ -41,21 +37,58 @@ $candidates = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Casting Vote method
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $election_id = $_POST['election_id'];
-    $position_id = $_POST['position_id'];
-    $candidate_id = $_POST['candidate_id'];
-    $data = [$election_id, $position_id, $candidate_id];
-    var_dump($data);
-    $stmt = $pdo->prepare("INSERT INTO votes (election_id,candidate_id,position_id,vote_count) VALUES 
-    (?,?,?,?)");
-    $vote = $stmt->execute([$election_id, $candidate_id, $position_id, 1]);
 
-    $stmt = $pdo->prepare("UPDATE voters SET has_voted=true WHERE token=?");
-    $isVoted = $stmt->execute([$_GET['token']]);
-    if ($vote) {
-        echo '<script>alert("Vote Casted")</script>';
+    $entered_token = trim($_POST['entered_token'] ?? '');
+
+    $election_id = $_POST['election_id'] ?? '';
+    $candidate_id = $_POST['candidate_id'] ?? '';
+
+    $stmt = $pdo->prepare("SELECT position_id FROM candidates WHERE id=? AND election_id=?");
+    $stmt->execute([$candidate_id, $election_id]);
+    $candidate = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$candidate) {
+        http_response_code(400);
+        exit('Invalid candidate selected.');
+    }
+
+    $position_id = $candidate['position_id'];
+
+    $stmt = $pdo->prepare("SELECT id FROM voters WHERE token=?
+     AND user_id=?
+     AND election_id=?
+     AND has_voted=0 LIMIT 1");
+    $stmt->execute([$entered_token, $_SESSION['user_id'], $election_id]);
+    if (!$stmt->fetch((PDO::FETCH_ASSOC))) {
+        echo "<script>alert('Token is incorrect')</script>";
+    } else {
+
+        $stmt = $pdo->prepare("SELECT * FROM votes WHERE candidate_id=? AND election_id=?");
+        $stmt->execute([$candidate_id, $election_id]);
+        $has_votes = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($has_votes) {
+            $votes = $has_votes['vote_count'] + 1;
+            $stmt = $pdo->prepare("UPDATE votes SET vote_count=? WHERE candidate_id=? AND election_id=?");
+            $stmt->execute([$votes, $candidate_id, $election_id]);
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO votes (election_id,candidate_id,position_id,vote_count) VALUES
+    (?,?,?,?)");
+            $stmt->execute([$election_id, $candidate_id, $position_id, 1]);
+        }
+
+        $stmt = $pdo->prepare("UPDATE voters SET has_voted=true WHERE token=? AND user_id=?");
+        $isVoted = $stmt->execute([$entered_token, $_SESSION['user_id']]);
+        if ($isVoted) {
+            header('Location: dashboard.php');
+            exit();
+        }
     }
 }
+?>
+<?php
+$portalRole = 'voter';
+$pageTitle = 'Cast Your Vote';
+$pageDescription = 'Review the candidates and securely submit your choice for this election.';
 ?>
 
 <!DOCTYPE html>
@@ -70,207 +103,151 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <link rel="stylesheet" href="../../public/css/app.css">
 </head>
 
-<body class="min-h-screen bg-slate-50 text-slate-800">
+<body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
+    <div class="flex min-h-screen flex-col md:flex-row">
+        <?php include_once APP_ROOT . '/includes/voter/voter_sidebar.php' ?>
+        <div class="min-w-0 flex-1">
+            <?php include_once APP_ROOT . '/includes/voter/voter_header.php' ?>
 
-    <div class="flex min-h-screen">
-        <aside class="w-full shrink-0 border-b border-slate-200 bg-white p-4 md:w-64 md:border-b-0 md:border-r md:p-6">
-            <a href="#dashboard" class="mb-5 flex items-center gap-3 px-2 md:mb-8" aria-label="Ballot home">
-                <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-700 text-white">
-                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 5.5 10.5 8 16 2.5M7 13h10M7 17h6M5 3h3m8 0h3a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2" />
-                    </svg>
-                </span>
-                <span class="text-xl font-bold tracking-tight text-slate-900">ballot<span class="text-purple-700">.</span></span>
-            </a>
+            <!-- Main Content -->
+            <main class="min-w-0 flex-1 pb-8">
 
-            <p class="mb-3 hidden px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 md:block">Menu</p>
-            <nav class="grid grid-cols-2 gap-2 md:grid-cols-1" aria-label="Voter navigation">
-                <a href="#dashboard" aria-current="page" class="flex items-center gap-3 rounded-xl bg-purple-50 px-3 py-3 text-sm font-semibold text-purple-700 ring-1 ring-inset ring-purple-100">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10Z" />
-                    </svg>
-                    Dashboard
-                </a>
-                <a href="#elections" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-purple-700">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 3v3m10-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm3 8h3m-3 4h6" />
-                    </svg>
-                    Elections
-                </a>
-                <a href="#profile" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-purple-700">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 21a8 8 0 0 0-16 0m8-10a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" />
-                    </svg>
-                    My Profile
-                </a>
-                <a href="#logout" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 md:mt-4">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 17l5-5-5-5m5 5H3m9-9h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7" />
-                    </svg>
-                    Logout
-                </a>
-            </nav>
-        </aside>
+                <!-- Page Content -->
+                <div class="mx-auto max-w-7xl space-y-7 px-5 py-7 md:px-10 md:py-10">
 
-        <!-- Main Content -->
-        <main class="min-w-0 flex-1 pb-24 md:pb-8">
+                    <!-- Election Information -->
+                    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div class="border-l-4 border-orange-500 p-6 md:p-8">
 
-            <!-- Top Header -->
-            <header class="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-5 md:px-10">
-                <div>
-                    <p class="text-sm text-slate-500">Voter Portal / Elections</p>
-                    <h1 class="mt-1 text-xl font-bold text-slate-900 md:text-2xl">
-                        Cast Your Vote
-                    </h1>
-                </div>
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <span class="inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700">
+                                    <span class="h-2 w-2 rounded-full bg-green-500"></span>
+                                    <?= ucfirst($election['status']) ?>
+                                </span>
 
-                <div class="flex items-center gap-3">
-                    <div class="hidden text-right sm:block">
-                        <p class="text-sm font-semibold text-slate-800">
-                            John Anderson
-                        </p>
-                        <p class="text-xs text-slate-500">Registered Voter</p>
-                    </div>
-
-                    <div class="flex h-11 w-11 items-center justify-center rounded-full bg-purple-100 font-bold text-purple-700">
-                        JA
-                    </div>
-                </div>
-            </header>
-
-            <!-- Page Content -->
-            <div class="mx-auto max-w-7xl space-y-7 px-5 py-7 md:px-10 md:py-10">
-
-                <!-- Election Information -->
-                <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div class="border-l-4 border-orange-500 p-6 md:p-8">
-
-                        <div class="flex flex-wrap items-center justify-between gap-3">
-                            <span class="inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700">
-                                <span class="h-2 w-2 rounded-full bg-green-500"></span>
-                                <?= ucfirst($election['status']) ?>
-                            </span>
-
-                            <span class="rounded-full bg-purple-50 px-3 py-1.5 text-xs font-semibold text-purple-700">
-                                <?= date('Y', strtotime($election['start_date'])) ?> Election
-                            </span>
-                        </div>
-
-                        <h2 class="mt-5 text-2xl font-bold text-slate-900 md:text-3xl">
-                            <?= $election['title'] ?>
-                        </h2>
-
-                        <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-600 md:text-base">
-                            Review the available candidates and their party affiliations
-                            carefully. Select your preferred candidate and submit your vote.
-                        </p>
-
-                        <div class="mt-6 grid gap-4 border-t border-slate-100 pt-5 sm:grid-cols-2 lg:grid-cols-3">
-
-                            <div class="flex items-start gap-3">
-                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-700">
-                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M8 7V3m8 4V3M4 11h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-slate-500">Election Starts</p>
-                                    <p class="mt-1 text-sm font-semibold text-slate-800">
-                                        <?= date('M j, Y - h:i A', strtotime($election['start_date'])) ?>
-                                    </p>
-                                </div>
+                                <span class="rounded-full bg-purple-50 px-3 py-1.5 text-xs font-semibold text-purple-700">
+                                    <?= date('Y', strtotime($election['start_date'])) ?> Election
+                                </span>
                             </div>
 
-                            <div class="flex items-start gap-3">
-                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
-                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 8v4l3 2m6-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-slate-500">Election Ends</p>
-                                    <p class="mt-1 text-sm font-semibold text-slate-800">
-                                        <?= date('M j, Y - h:i A', strtotime($election['end_date'])) ?>
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="flex items-start gap-3">
-                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-700">
-                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12l2 2 4-4m5 2a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-slate-500">Voting Status</p>
-                                    <p class="mt-1 text-sm font-semibold text-green-700">
-                                        <?= $voter['has_voted'] == true ? 'Vote Casted' : 'Not Voted' ?>
-                                    </p>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Voting Instructions -->
-                <section class="rounded-xl border border-blue-100 bg-blue-50 p-4 md:p-5">
-                    <div class="flex items-start gap-3">
-                        <svg class="mt-0.5 h-5 w-5 shrink-0 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 16v-4m0-4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z" />
-                        </svg>
-
-                        <div>
-                            <h3 class="font-semibold text-blue-900">Before you vote</h3>
-                            <p class="mt-1 text-sm leading-6 text-blue-800">
-                                Check each candidate's name, party, and position.
-                                Select your preferred candidate, then review your choice
-                                before submitting. Your vote should reflect your own decision.
-                            </p>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Candidates Section -->
-                <section>
-                    <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
-                        <div>
-                            <h2 class="text-xl font-bold text-slate-900 md:text-2xl">
-                                Available Candidates
+                            <h2 class="mt-5 text-2xl font-bold text-slate-900 md:text-3xl">
+                                <?= $election['title'] ?>
                             </h2>
-                            <p class="mt-1 text-sm text-slate-500">
-                                Select one candidate to cast your vote.
+
+                            <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-600 md:text-base">
+                                Review the available candidates and their party affiliations
+                                carefully. Select your preferred candidate and submit your vote.
                             </p>
+
+                            <div class="mt-6 grid gap-4 border-t border-slate-100 pt-5 sm:grid-cols-2 lg:grid-cols-3">
+
+                                <div class="flex items-start gap-3">
+                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-700">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 7V3m8 4V3M4 11h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-slate-500">Election Starts</p>
+                                        <p class="mt-1 text-sm font-semibold text-slate-800">
+                                            <?= date('M j, Y - h:i A', strtotime($election['start_date'])) ?>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start gap-3">
+                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 8v4l3 2m6-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-slate-500">Election Ends</p>
+                                        <p class="mt-1 text-sm font-semibold text-slate-800">
+                                            <?= date('M j, Y - h:i A', strtotime($election['end_date'])) ?>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-start gap-3">
+                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-700">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12l2 2 4-4m5 2a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-slate-500">Voting Status</p>
+                                        <p class="mt-1 text-sm font-semibold text-green-700">
+                                            <?= $voter['has_voted'] == true ? 'Vote Casted' : 'Not Voted' ?>
+                                        </p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Voting Instructions -->
+                    <section class="rounded-xl border border-blue-100 bg-blue-50 p-4 md:p-5">
+                        <div class="flex items-start gap-3">
+                            <svg class="mt-0.5 h-5 w-5 shrink-0 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 16v-4m0-4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z" />
+                            </svg>
+
+                            <div>
+                                <h3 class="font-semibold text-blue-900">Before you vote</h3>
+                                <p class="mt-1 text-sm leading-6 text-blue-800">
+                                    Check each candidate's name, party, and position.
+                                    Select your preferred candidate, then review your choice
+                                    before submitting. Your vote should reflect your own decision.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Candidates Section -->
+                    <section>
+                        <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+                            <div>
+                                <h2 class="text-xl font-bold text-slate-900 md:text-2xl">
+                                    Available Candidates
+                                </h2>
+                                <p class="mt-1 text-sm text-slate-500">
+                                    Select one candidate to cast your vote.
+                                </p>
+                            </div>
+
+                            <span class="rounded-lg bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm ring-1 ring-slate-200">
+                                <?= count($candidates) ?> Candidates
+                            </span>
                         </div>
 
-                        <span class="rounded-lg bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm ring-1 ring-slate-200">
-                            <?= count($candidates) ?> Candidates
-                        </span>
-                    </div>
+                        <!-- Candidate Selection Form -->
+                        <?php
+                        if ($voter['has_voted'] == true) {
+                            echo 'Already vote casted';
+                        } else {
+                            if (empty($candidates)) {
+                                echo 'No candidates registered available for this election.';
+                            } else {
 
-                    <!-- Candidate Selection Form -->
-                    <?php
-                    if ($voter['has_voted'] == true) {
-                        echo 'Already vote casted';
-                    } else {
-                        echo '
-                    <form action="cast_vote.php?token=' . $voter['token'] . '" method="POST">
+                                echo '
+                              <form action="cast_vote.php?token=' . urlencode($voter['token']) . '" method="POST">
+                             <input type="hidden" name="election_id" value="' . $election['id'] . '">
 
-                        <div class="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">';
+                             <div class="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">';
 
-                        foreach ($candidates as $key => $candidate) {
-                            $username = explode(' ', $candidate['candidate_name'], 2);
-                            $firstname = $username[0];
-                            $lastname = $username[1];
-                            $username = ucfirst($firstname) . ' ' . ucfirst($lastname);
-                            echo '
-                           <label class="group relative block cursor-pointer">
-                                <input type="hidden" name="position_id" value="' . $candidate['position_id'] . '">
-                                <input type="hidden" name="election_id" value="' . $election['id'] . '">
+                                foreach ($candidates as $key => $candidate) {
+                                    $username = explode(' ', $candidate['candidate_name'], 2);
+                                    $firstname = $username[0];
+                                    $lastname = $username[1];
+                                    $username = ucfirst($firstname) . ' ' . ucfirst($lastname);
+                                    echo '
+                             <label class="group relative block cursor-pointer">
                                 <input
                                     type="radio"
                                     name="candidate_id"
@@ -322,8 +299,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     </div>
                                 </div>
                             </label>';
-                        }
-                        echo '
+                                }
+                                echo '
                         </div>
 
                         <!-- Submission Section -->
@@ -364,78 +341,62 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             </div>
                         </div>
 
-                    </form>';
-                    }
-                    ?>
+                     </form>';
+                            }
+                        }
+                        ?>
 
-                </section>
+                    </section>
 
-                <!-- Security Notice -->
-                <section class="flex items-start gap-3 rounded-xl border border-green-100 bg-green-50 p-4">
-                    <svg class="mt-0.5 h-5 w-5 shrink-0 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 15v2m-6 4h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Zm3-10V6a3 3 0 0 1 6 0v3" />
-                    </svg>
+                    <!-- Security Notice -->
+                    <section class="flex items-start gap-3 rounded-xl border border-green-100 bg-green-50 p-4">
+                        <svg class="mt-0.5 h-5 w-5 shrink-0 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 15v2m-6 4h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2Zm3-10V6a3 3 0 0 1 6 0v3" />
+                        </svg>
 
-                    <div>
-                        <h3 class="text-sm font-semibold text-green-900">
-                            Secure voting
-                        </h3>
-                        <p class="mt-1 text-sm leading-5 text-green-800">
-                            Keep your voting credentials private. The server must verify
-                            your eligibility and election status before recording a vote.
-                        </p>
-                    </div>
-                </section>
+                        <div>
+                            <h3 class="text-sm font-semibold text-green-900">
+                                Secure voting
+                            </h3>
+                            <p class="mt-1 text-sm leading-5 text-green-800">
+                                Keep your voting credentials private. The server must verify
+                                your eligibility and election status before recording a vote.
+                            </p>
+                        </div>
+                    </section>
 
-                <!-- Footer -->
-                <footer class="border-t border-slate-200 pt-6 text-center text-sm text-slate-500">
-                    © 2026 LiveVoting. Online Voting System.
-                </footer>
+                    <!-- Footer -->
+                    <footer class="border-t border-slate-200 pt-6 text-center text-sm text-slate-500">
+                        © 2026 LiveVoting. Online Voting System.
+                    </footer>
 
-            </div>
-        </main>
-    </div>
-
-    <!-- Mobile Bottom Navigation -->
-    <nav class="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white px-2 py-2 md:hidden">
-        <div class="mx-auto flex max-w-lg items-center justify-around">
-
-            <a href="dashboard.php" class="flex flex-col items-center gap-1 rounded-lg px-3 py-2 text-slate-500">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M3 10.5 12 3l9 7.5M5 9v12h14V9" />
-                </svg>
-                <span class="text-xs font-medium">Dashboard</span>
-            </a>
-
-            <a href="elections.php" class="flex flex-col items-center gap-1 rounded-lg px-3 py-2 text-slate-500">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 5H7a2 2 0 0 0-2 2v12h14V5h-4M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2M9 12h6" />
-                </svg>
-                <span class="text-xs font-medium">Elections</span>
-            </a>
-
-            <a href="cast_vote.php" class="flex flex-col items-center gap-1 rounded-lg bg-purple-50 px-4 py-2 text-purple-700">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12l2 2 4-4m5 2a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" />
-                </svg>
-                <span class="text-xs font-semibold">Cast Vote</span>
-            </a>
-
-            <a href="profile.php" class="flex flex-col items-center gap-1 rounded-lg px-3 py-2 text-slate-500">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M20 21a8 8 0 0 0-16 0m8-10a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" />
-                </svg>
-                <span class="text-xs font-medium">Profile</span>
-            </a>
-
+                </div>
+            </main>
         </div>
-    </nav>
 
+        <script>
+            const form = document.querySelector('form[action*="cast_vote.php"]');
+
+            if (form) {
+                form.addEventListener('submit', (event) => {
+                    event.preventDefault();
+                    const token = prompt("Enter your token number to cast vote");
+
+                    if (token === null || token.trim() === "") {
+                        alert("Token is required");
+                        return;
+                    }
+
+                    const input = document.createElement("input");
+                    input.type = "hidden";
+                    input.name = "entered_token";
+                    input.value = token.trim();
+                    form.appendChild(input);
+                    form.submit();
+                });
+            }
+        </script>
 </body>
 
 </html>

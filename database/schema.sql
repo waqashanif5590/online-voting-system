@@ -91,5 +91,5 @@ CREATE TABLE votes (
    FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
    FOREIGN KEY (candidate_id) REFERENCES candidates(id) ON DELETE CASCADE,
    FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE CASCADE,
-   UNIQUE (election_id, position_id)
+   UNIQUE (election_id, candidate_id)
 );

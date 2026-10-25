@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../app/paths.php';
 session_start();
 require_once APP_ROOT . '/app/config/database.php';
+require_once APP_ROOT . '/views/auth/check_auth.php';
 // Temporary demo values until database integration
 $candidateName = $_SESSION['user_name'] ?? 'Candidate Name';
 
@@ -47,6 +48,9 @@ $statusMessages = [
 
 $statusClass = $statusColors[$applicationStatus] ?? 'bg-gray-100 text-gray-700';
 $statusMessage = $statusMessages[$applicationStatus] ?? 'Your application status is currently unavailable.';
+$portalRole = 'candidate';
+$pageTitle = 'Dashboard';
+$pageDescription = 'Welcome back, ' . $candidateName . '. Review your candidate application and election information.';
 ?>
 
 <!DOCTYPE html>
@@ -60,21 +64,12 @@ $statusMessage = $statusMessages[$applicationStatus] ?? 'Your application status
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-800">
-    <?php include APP_ROOT . '/includes/candidate/candidate_header.php'; ?>
-
     <div class="flex min-h-[calc(100vh-65px)] flex-col md:flex-row">
         <?php include APP_ROOT . '/includes/candidate/candidate_sidebar.php'; ?>
-
-        <main class="min-w-0 flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
+        <div class="min-w-0 flex-1">
+            <?php include APP_ROOT . '/includes/candidate/candidate_header.php'; ?>
+            <main class="min-w-0 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
             <div class="mx-auto max-w-5xl">
-                <div class="mb-8">
-                    <p class="text-sm font-bold uppercase tracking-widest text-purple-700">Candidate Portal</p>
-                    <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">Dashboard</h1>
-                    <p class="mt-3 text-slate-600">
-                        Welcome back, <?= htmlspecialchars($candidateName, ENT_QUOTES, 'UTF-8') ?>.
-                    </p>
-                </div>
-
                 <div class="grid gap-5 lg:grid-cols-2">
                     <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                         <h2 class="mb-4 text-lg font-bold text-slate-900">Application Status</h2>
@@ -119,7 +114,8 @@ $statusMessage = $statusMessages[$applicationStatus] ?? 'Your application status
                     </div>
                 </section>
             </div>
-        </main>
+            </main>
+        </div>
     </div>
 
 </body>

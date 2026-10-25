@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../app/paths.php';
 session_start();
 require_once APP_ROOT . '/app/config/database.php';
+require_once APP_ROOT . '/views/auth/check_auth.php';
 
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id=?");
 $stmt->execute([$_SESSION['user_id']]);
@@ -44,6 +45,9 @@ $statusColors = [
     true => 'bg-green-50 text-green-700',
     false => 'bg-orange-50 text-orange-700'
 ];
+$portalRole = 'voter';
+$pageTitle = 'Voter Dashboard';
+$pageDescription = 'Track your election participation, voting token, and recent voting history.';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -58,67 +62,15 @@ $statusColors = [
 
 <body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
     <div class="flex min-h-screen flex-col md:flex-row">
-        <aside class="w-full shrink-0 border-b border-slate-200 bg-white p-4 md:w-64 md:border-b-0 md:border-r md:p-6">
-            <a href="#dashboard" class="mb-5 flex items-center gap-3 px-2 md:mb-8" aria-label="Ballot home">
-                <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-700 text-white">
-                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8 5.5 10.5 8 16 2.5M7 13h10M7 17h6M5 3h3m8 0h3a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2" />
-                    </svg>
-                </span>
-                <span class="text-xl font-bold tracking-tight text-slate-900">ballot<span class="text-purple-700">.</span></span>
-            </a>
-
-            <p class="mb-3 hidden px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 md:block">Menu</p>
-            <nav class="grid grid-cols-2 gap-2 md:grid-cols-1" aria-label="Voter navigation">
-                <a href="#dashboard" aria-current="page" class="flex items-center gap-3 rounded-xl bg-purple-50 px-3 py-3 text-sm font-semibold text-purple-700 ring-1 ring-inset ring-purple-100">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10Z" />
-                    </svg>
-                    Dashboard
-                </a>
-                <a href="#elections" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-purple-700">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 3v3m10-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm3 8h3m-3 4h6" />
-                    </svg>
-                    Elections
-                </a>
-                <a href="#profile" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-purple-700">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 21a8 8 0 0 0-16 0m8-10a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" />
-                    </svg>
-                    My Profile
-                </a>
-                <a href="#logout" class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 md:mt-4">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 17l5-5-5-5m5 5H3m9-9h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7" />
-                    </svg>
-                    Logout
-                </a>
-            </nav>
-
-
-
-        </aside>
-
+        <?php include_once APP_ROOT . '/includes/voter/voter_sidebar.php' ?>
         <div class="min-w-0 flex-1">
-            <header class="border-b border-slate-200 bg-white">
-                <div class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8 lg:px-10">
-                    <p class="text-sm text-slate-500">Voter Portal <span class="mx-2 text-slate-300">/</span> Dashboard</p>
-                    <div class="flex items-center gap-3">
-                        <div class="hidden text-right sm:block">
-                            <p class="text-sm font-semibold text-slate-800"><?= $username ?></p>
-                            <p class="text-xs text-slate-500">Voter account</p>
-                        </div>
-                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-purple-700" aria-label="John Anderson"><?= strtoupper($firstname[0] . $lastname[0]) ?></div>
-                    </div>
-                </div>
-            </header>
+            <?php include_once APP_ROOT . '/includes/voter/voter_header.php' ?>
 
             <main id="dashboard" class="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10 lg:px-10">
                 <section class="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                     <div>
                         <p class="mb-2 text-sm font-medium text-purple-700"><?= date('l, F d, Y') ?></p>
-                        <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Welcome back, <?= ucfirst($firstname) ?>!</h1>
+                        <h2 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Welcome back, <?= ucfirst($firstname) ?>!</h2>
                         <p class="mt-2 text-sm text-slate-500 sm:text-base">Here’s what’s happening with your vote today.</p>
                     </div>
                     <span class="inline-flex w-fit items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700">
@@ -270,9 +222,19 @@ $statusColors = [
                                     A token has been assigned for this sample election.
                                 </p>
                             </div>
-                        </div>
-
-                        <a href="./cast_vote.php?token=' . $voter_data['token_number'] . '"
+                        </div>';
+                            if ($voter_data['token_status'] == true) {
+                                echo '<span
+                            class="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-x bg-gray-100 px-5 py-3 text-sm font-semibold text-black shadow-sm transition focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
+                         Vote Casted
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M5 12h14m-6-6 6 6-6 6" />
+                            </svg>
+                        </span>';
+                            } else {
+                                echo '<a href="./cast_vote.php?token=' . $voter_data['token_number'] . '"
                             class="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-purple-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
                             Cast Vote
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none"
@@ -280,8 +242,10 @@ $statusColors = [
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M5 12h14m-6-6 6 6-6 6" />
                             </svg>
-                        </a>
+                        </a>';
+                            }
 
+                            echo '
                         <p class="mt-3 text-center text-xs text-slate-500">
                             This token number can be used only once.
                         </p>';
