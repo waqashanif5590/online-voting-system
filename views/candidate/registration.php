@@ -96,13 +96,16 @@ $pageDescription = $candidate
             <?php include APP_ROOT . '/includes/candidate/candidate_header.php'; ?>
             <main class="min-w-0 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
 
-            <?php
-            if ($candidate) {
-                 include APP_ROOT . '/includes/candidate/submitted_application.php';
-            } else {
-                include APP_ROOT . '/includes/candidate/registration_form.php';
-            }
-            ?>
+                <?php
+
+                if ($candidate) {
+                    $applicationCandidateId = (int) $candidate['id'];
+                    $showReviewActions = false;
+                    include APP_ROOT . '/includes/candidate/submitted_application.php';
+                } else {
+                    include APP_ROOT . '/includes/candidate/registration_form.php';
+                }
+                ?>
 
             </main>
         </div>

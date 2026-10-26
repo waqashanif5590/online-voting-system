@@ -11,9 +11,9 @@ if ($portalRole === '') {
 $portalNavigation = [
     'admin' => [
         ['label' => 'Dashboard', 'href' => 'views/admin/dashboard.php#dashboard', 'pages' => ['dashboard.php']],
-        ['label' => 'Elections', 'href' => 'views/admin/dashboard.php#elections', 'pages' => []],
-        ['label' => 'Voters', 'href' => 'views/admin/dashboard.php#voters', 'pages' => ['assign_token.php']],
-        ['label' => 'Candidates', 'href' => 'views/admin/dashboard.php#candidates', 'pages' => []],
+        ['label' => 'Elections', 'href' => 'views/common/elections.php', 'pages' => ['elections.php']],
+        ['label' => 'Voters', 'href' => 'views/admin/voters.php', 'pages' => ['voters.php']],
+        ['label' => 'Candidates', 'href' => 'views/admin/candidates.php', 'pages' => ['candidates.php']],
         ['label' => 'Applications', 'href' => 'views/admin/dashboard.php#applications', 'pages' => []],
         ['label' => 'Positions', 'href' => 'views/admin/dashboard.php#positions', 'pages' => []],
         ['label' => 'Political Parties', 'href' => 'views/admin/dashboard.php#parties', 'pages' => []],
