@@ -17,8 +17,8 @@ if ($candidate) {
     $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
     // Elections for candidate registration
-    $stmt = $pdo->prepare("SELECT * FROM `elections` WHERE status='upcoming'");
-    $stmt->execute();
+    $stmt = $pdo->prepare("SELECT * FROM `elections` WHERE status=?");
+    $stmt->execute(['upcoming']);
     $elections = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Positions for candidate registration

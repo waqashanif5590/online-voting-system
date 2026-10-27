@@ -30,9 +30,9 @@ $stmt = $pdo->prepare("SELECT candidates.id AS candidate_id,
         INNER JOIN parties ON candidates.party_id=parties.id
         INNER JOIN positions ON candidates.position_id=positions.id
         INNER JOIN elections ON candidates.election_id=elections.id
-        WHERE election_id=?
+        WHERE candidates.election_id=? AND candidates.status=?
 ");
-$stmt->execute([$election['id']]);
+$stmt->execute([$election['id'], 'approved']);
 $candidates = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Casting Vote method
@@ -230,6 +230,8 @@ $pageDescription = 'Review the candidates and securely submit your choice for th
                         <?php
                         if ($voter['has_voted'] == true) {
                             echo 'Already vote casted';
+                        } else if ($election['status'] !== 'ongoing') {
+                            echo 'Election not started yet, will be live soon.';
                         } else {
                             if (empty($candidates)) {
                                 echo 'No candidates registered available for this election.';

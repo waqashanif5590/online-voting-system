@@ -15,7 +15,8 @@
                 'approved' => 'bg-green-50 text-green-700',
                 'rejected' => 'bg-red-50 text-red-700'
             ];
-            $candidates = $pdo->query("SELECT candidates.status AS status, 
+            if ($limit == false) {
+                $candidates = $pdo->query("SELECT candidates.status AS status, 
                                 candidates.id AS candidate_id, 
                                 users.name AS username,
                                 elections.title AS election,
@@ -23,8 +24,20 @@
                                 INNER JOIN users ON candidates.user_id=users.id
                                 INNER JOIN elections ON candidates.election_id=elections.id
                                 INNER JOIN positions ON candidates.position_id=positions.id
-                                LIMIT 4
                                 ")->fetchAll();
+            } else {
+
+                $candidates = $pdo->query("SELECT candidates.status AS status, 
+                                        candidates.id AS candidate_id, 
+                                        users.name AS username,
+                                        elections.title AS election,
+                                        positions.title AS position FROM candidates
+                                        INNER JOIN users ON candidates.user_id=users.id
+                                        INNER JOIN elections ON candidates.election_id=elections.id
+                                        INNER JOIN positions ON candidates.position_id=positions.id
+                                        LIMIT 4
+                                        ")->fetchAll();
+            }
             if (empty($candidates)) {
                 echo '<tr>
                                 <td class="px-6 py-4 font-semibold text-slate-600">

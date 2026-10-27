@@ -86,10 +86,41 @@ CREATE TABLE votes (
    election_id INT NOT NULL,
    candidate_id INT NOT NULL,
    position_id INT NOT NULL,
-   vote_count INT NULL,
    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
    FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
    FOREIGN KEY (candidate_id) REFERENCES candidates(id) ON DELETE CASCADE,
    FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE CASCADE,
    UNIQUE (election_id, candidate_id)
 );
+
+CREATE TABLE voter_participation (
+   id INT AUTO_INCREMENT PRIMARY KEY,
+   voter_id INT NOT NULL,
+   election_id INT NOT NULL,
+   position_id INT NOT NULL,
+   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   FOREIGN KEY (voter_id) REFERENCES voters(id) ON DELETE CASCADE,
+   FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
+   FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE CASCADE,
+   UNIQUE (voter_id, election_id, position_id)
+)
+
+CREATE TABLE election_positions (
+   id INT AUTO_INCREMENT PRIMARY KEY,
+   election_id INT NOT NULL,
+   position_id INT NOT NULL,
+   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
+   FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE CASCADE,
+   UNIQUE (election_id, position_id)
+)
+
+CREATE TABLE election_parties (
+   id INT AUTO_INCREMENT PRIMARY KEY,
+   election_id INT NOT NULL,
+   party_id INT NOT NULL,
+   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
+   FOREIGN KEY (party_id) REFERENCES party(id) ON DELETE CASCADE,
+   UNIQUE (election_id, party_id)
+)

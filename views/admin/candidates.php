@@ -37,10 +37,12 @@ require_once APP_ROOT . '/views/auth/check_auth.php';
                                 <p class="mt-1 text-sm text-slate-500">Review candidate submissions and application status.
                                 </p>
                             </div>
-                           
+
                         </div>
                         <div class="overflow-x-auto">
-                            <?php include_once APP_ROOT . '/includes/admin/applications_list.php' ?>
+                            <?php
+                            $limit = false;
+                            include_once APP_ROOT . '/includes/admin/applications_list.php' ?>
                         </div>
                     </section>
 

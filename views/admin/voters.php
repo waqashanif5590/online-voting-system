@@ -35,10 +35,12 @@ require_once APP_ROOT . '/views/auth/check_auth.php';
                                 <h2 class="font-bold text-slate-900">Recent Voters</h2>
                                 <p class="mt-1 text-sm text-slate-500">Token and account overview</p>
                             </div>
-                           
+
                         </div>
                         <div class="overflow-x-auto">
-                            <?php include_once APP_ROOT . '/includes/admin/voters_list.php' ?>
+                            <?php
+                            $limit = false;
+                            include_once APP_ROOT . '/includes/admin/voters_list.php' ?>
                         </div>
                     </section>
 

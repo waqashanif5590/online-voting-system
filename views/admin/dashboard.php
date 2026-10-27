@@ -59,7 +59,9 @@ require_once APP_ROOT . '/views/auth/check_auth.php';
                                 applications <span aria-hidden="true">→</span></a>
                         </div>
                         <div class="overflow-x-auto">
-                            <?php include_once APP_ROOT . '/includes/admin/applications_list.php' ?>
+                            <?php
+                            $limit = true;
+                            include_once APP_ROOT . '/includes/admin/applications_list.php' ?>
                         </div>
                     </section>
 
@@ -75,7 +77,9 @@ require_once APP_ROOT . '/views/auth/check_auth.php';
                                     <span aria-hidden="true">→</span></a>
                             </div>
                             <div class="overflow-x-auto">
-                                <?php include_once APP_ROOT . '/includes/admin/voters_list.php' ?>
+                                <?php
+                                $limit = true;
+                                include_once APP_ROOT . '/includes/admin/voters_list.php' ?>
                             </div>
                         </section>
 

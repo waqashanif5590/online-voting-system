@@ -48,6 +48,7 @@ $statusColors = [
 $portalRole = 'voter';
 $pageTitle = 'Voter Dashboard';
 $pageDescription = 'Track your election participation, voting token, and recent voting history.';
+// $pageDescription = 'انتخابات میں اپنی شرکت، ووٹنگ ٹوکن اور حالیہ ووٹنگ کی تاریخ کو ٹریک کریں۔';
 ?>
 <!DOCTYPE html>
 <html lang="en">

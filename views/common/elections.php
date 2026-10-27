@@ -4,6 +4,9 @@ session_start();
 require_once APP_ROOT . '/app/config/database.php';
 require_once APP_ROOT . '/views/auth/check_auth.php';
 
+date_default_timezone_set('Asia/Karachi');
+$today = new DateTime('now');
+
 $stmt = $pdo->prepare("SELECT * FROM `elections` ORDER BY start_date ASC");
 $stmt->execute();
 $elections = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -17,7 +20,7 @@ foreach ($elections as $election) {
 
 $statusStyles = [
     'upcoming' => 'bg-blue-50 text-blue-700 ring-blue-600/20',
-    'ongoing' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
+    'ongoing' => 'bg-red-50 font-bold text-red-700 ring-1 ring-inset ring-red-200',
     'completed' => 'bg-slate-100 text-slate-600 ring-slate-500/20',
 ];
 $escape = static fn($value): string => htmlspecialchars((string) ($value ?? ''), ENT_QUOTES, 'UTF-8');
@@ -79,6 +82,9 @@ $pageDescription = 'Explore election schedules and check the current status of e
                             <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">
                                 There are no elections to display right now. Please check back later for updates.
                             </p>
+                            <?php if ($portalRole === 'admin'): ?>
+                                <a href="../admin/create_election.php" class="text-sm font-bold text-purple-700 hover:text-purple-900">Add New Election <span aria-hidden="true">→</span></a>
+                            <?php endif; ?>
                         </section>
                     <?php else: ?>
                         <section aria-label="All elections">
@@ -88,13 +94,14 @@ $pageDescription = 'Explore election schedules and check the current status of e
                                     <p class="mt-1 text-sm text-slate-500">Browse election details and important dates.</p>
                                 </div>
                                 <?= $portalRole === 'admin' ? ' <a href="../admin/create_election.php" class="text-sm font-bold text-purple-700 hover:text-purple-900">Add New Election <span aria-hidden="true">→</span></a>' : '' ?>
-
                             </div>
 
                             <div class="grid gap-5 lg:grid-cols-2">
                                 <?php foreach ($elections as $election):
                                     $status = $election['status'] ?? '';
                                     $statusClass = $statusStyles[$status] ?? 'bg-gray-100 text-gray-700 ring-gray-500/20';
+                                    $startDate = new DateTime($election['start_date']);
+                                    $endDate = new DateTime($election['end_date']);
                                 ?>
                                     <article class="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-purple-200 hover:shadow-lg sm:p-7">
                                         <div class="flex items-start justify-between gap-4">
@@ -104,15 +111,48 @@ $pageDescription = 'Explore election schedules and check the current status of e
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="m9 16 2 2 4-4" />
                                                 </svg>
                                             </div>
-                                            <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold capitalize ring-1 ring-inset <?= $statusClass ?>">
-                                                <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
-                                                <?= ucfirst($escape($status ?: 'unknown')) ?>
-                                            </span>
-                                        </div>
+                                            <div class="ml-auto flex flex-col items-end gap-2">
 
-                                        <h3 class="mt-5 text-xl font-bold leading-snug text-slate-900">
-                                            <?= $escape($election['title'] ?? 'Untitled election') ?>
-                                        </h3>
+                                                <span class="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold capitalize ring-1 ring-inset <?= $statusClass ?>">
+                                                    <?php if ($status != 'ongoing'): ?>
+                                                        <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+                                                        <?= ucfirst($escape($status ?: 'unknown')) ?>
+                                                    <?php else: ?>
+                                                        <span class="relative flex h-2.5 w-2.5">
+                                                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75"></span>
+                                                            <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-600"></span>
+                                                        </span>
+                                                        Election is live
+                                                    <?php endif; ?>
+                                                </span>
+
+
+                                                <!-- <span class="inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700 ring-1 ring-inset ring-red-200">
+                                                      
+                                                    </span> -->
+
+                                                <?php if (
+                                                    $portalRole === 'admin' &&
+                                                    $today >= $startDate &&
+                                                    $today <= $endDate &&
+                                                    $status === 'upcoming'
+                                                ): ?>
+                                                    <a href="<?= htmlspecialchars(app_url('app/controllers/actions.php?golive=' . $election['id']), ENT_QUOTES, 'UTF-8') ?>"
+                                                        class="inline-flex items-center justify-center rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1.5 text-[11px] font-bold text-purple-800 transition hover:bg-purple-100 focus:outline-none focus:ring-4 focus:ring-purple-100">
+                                                        Go Live
+                                                    </a>
+
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <h3 class="mt-5 text-xl font-bold leading-snug text-slate-900">
+                                                <?= $escape($election['title'] ?? 'Untitled election') ?>
+                                            </h3>
+                                            <?php if ($portalRole === 'admin'): ?>
+                                                <a href="<?= htmlspecialchars(app_url('app/controllers/actions.php?delete=' . $election['id']), ENT_QUOTES, 'UTF-8') ?>">Delete</a>
+                                            <?php endif; ?>
+                                        </div>
                                         <p class="mt-2 min-h-12 whitespace-pre-line text-sm leading-6 text-slate-600">
                                             <?= $escape($election['description'] ?? 'No election description is available.') ?>
                                         </p>

@@ -17,7 +17,23 @@
             ];
             $token = 0;
             $token_status = '';
-            $voters = $pdo->query("SELECT voters.token AS assigned_token,
+            if ($limit == false) {
+                $voters = $pdo->query("SELECT voters.token AS assigned_token,
+                                                    voters.has_voted AS vote_status,
+                                                    users.id AS user_id,
+                                                    users.name AS username,
+                                                    users.identity_number AS user_identity,
+                                                    users.status AS account_status,
+                                                    elections.title AS election
+                                                FROM users
+                                                LEFT JOIN voters ON voters.user_id = users.id
+                                                LEFT JOIN elections ON voters.election_id = elections.id
+                                                WHERE users.role = 'voter'
+                                            ")->fetchAll(PDO::FETCH_ASSOC);
+            } else {
+
+                $voters = $pdo->query("SELECT voters.token AS assigned_token,
+                                                    voters.has_voted AS vote_status,
                                                     users.id AS user_id,
                                                     users.name AS username,
                                                     users.identity_number AS user_identity,
@@ -29,18 +45,22 @@
                                                 WHERE users.role = 'voter'
                                                 LIMIT 4
                                             ")->fetchAll(PDO::FETCH_ASSOC);
+            }
             if (empty($voters)) {
                 echo ' <tr>
                                         <td class="px-5 py-4 font-semibold text-slate-800">No Voters Exists as no election is completed.</td>
                                         </tr>';
             } else {
                 foreach ($voters as $key => $voter) {
-                    if ($voter['assigned_token'] !== null) {
+                    if ($voter['assigned_token'] !== null && $voter['vote_status'] == false) {
                         $token = 1;
                         $token_status = 'Assigned';
-                    } else {
+                    } else if ($voter['assigned_token'] == null) {
                         $token = 0;
                         $token_status = 'Not Assigned';
+                    } else if ($voter['vote_status'] == true) {
+                        $token = 1;
+                        $token_status = 'Token Used';
                     }
                     if ($voter['account_status'] == true) {
                         $btn_text = 'Block';
