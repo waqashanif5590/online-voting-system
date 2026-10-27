@@ -11,6 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($user == null) {
         echo 'Account not found, please register first.';
+    } else if ($user['status'] == false) {
+        echo 'Account is blocked, please contact administrator';
     } else {
         if (password_verify($password, $user['password'])) {
             session_start();
@@ -60,9 +62,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </a>
 
             <p class="text-sm text-slate-600">
-                Already registered?
+               Don't have account?
                 <a href="<?= htmlspecialchars(app_url('views/auth/register.php'), ENT_QUOTES, 'UTF-8') ?>" class="font-bold text-purple-700 hover:text-purple-900">
-                    Login
+                    Register Now
                 </a>
             </p>
         </div>

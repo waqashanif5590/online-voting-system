@@ -1,7 +1,6 @@
 
 <?php
 require_once __DIR__ . '/app/paths.php';
-
 $pageTitle = 'Online Voting System | Your Vote, Your Voice';
 ?>
 

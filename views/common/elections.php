@@ -154,11 +154,17 @@ $pageDescription = 'Explore election schedules and check the current status of e
                                             <?php endif; ?>
 
                                             <?php if ($portalRole === 'admin'): ?>
-                                                <a href="../admin/review_election_details.php" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-sm font-bold text-purple-800 transition hover:bg-purple-100 focus:outline-none focus:ring-4 focus:ring-purple-100">
-                                                    Review & Edit Details
-                                                    <span aria-hidden="true">&rarr;</span>
-                                                </a>
-
+                                                <?php if ($status === 'ongoing'): ?>
+                                                    <a href="<?= htmlspecialchars(app_url('app/controllers/actions.php?election=' . $election['id']), ENT_QUOTES, 'UTF-8') ?>" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-sm font-bold text-purple-800 mb-2 transition hover:bg-purple-100 focus:outline-none focus:ring-4 focus:ring-purple-100">
+                                                        Stop & Mark Completed
+                                                        <span aria-hidden="true">&rarr;</span>
+                                                    </a>
+                                                <?php elseif ($status === 'upcoming'): ?>
+                                                    <a href="../admin/review_election_details.php?election=<?= $election['id'] ?>" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-sm font-bold text-purple-800 transition hover:bg-purple-100 focus:outline-none focus:ring-4 focus:ring-purple-100">
+                                                        Review & Edit Details
+                                                        <span aria-hidden="true">&rarr;</span>
+                                                    </a>
+                                                <?php endif; ?>
                                             <?php endif; ?>
                                         </div>
                                     </article>

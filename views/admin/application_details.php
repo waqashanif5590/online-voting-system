@@ -32,7 +32,7 @@ $candidateId = filter_input(INPUT_GET, 'candidate', FILTER_VALIDATE_INT);
                 <?php
                 $applicationCandidateId = $candidateId;
                 $showReviewActions = true;
-                include APP_ROOT . '/includes/candidate/submitted_application.php';
+                include APP_ROOT . '/includes/shared/submitted_application.php';
                 ?>
             </main>
         </div>

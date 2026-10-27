@@ -1,3 +1,28 @@
+<?php
+require_once __DIR__ . '/../../app/paths.php';
+session_start();
+require_once APP_ROOT . '/app/config/database.php';
+require_once APP_ROOT . '/views/auth/check_auth.php';
+
+$electionId = filter_input(INPUT_GET, 'election', FILTER_VALIDATE_INT);
+$stmt = $pdo->prepare("SELECT * FROM elections WHERE id=?");
+$stmt->execute([$electionId]);
+$election = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $title = $_POST['title'];
+    $description = $_POST['description'];
+    $start_date = $_POST['start_date'];
+    $end_date = $_POST['end_date'];
+    $status = $_POST['status'];
+    $electionId = $_POST['election_id'];
+    $stmt = $pdo->prepare("UPDATE elections SET title=?, description=?, start_date=?, end_date=?, status=? WHERE id=?");
+    $update = $stmt->execute([$title, $description, $start_date, $end_date, $status, $electionId]);
+    if ($update) {
+        header('Location: ' . app_url('views/common/elections.php'));
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -45,47 +70,56 @@
                     </div>
 
                     <!-- Static form: connect its action and values to your backend later. -->
-                    <form action="" method="POST" class="space-y-6 px-5 py-6 sm:px-8 sm:py-8">
+                    <form action="<?= $election['status'] === 'upcoming' ? './review_election_details.php' : '' ?>" method="POST" class="space-y-6 px-5 py-6 sm:px-8 sm:py-8">
+                        <input type="hidden" name="election_id" value="<?= $election['id'] ?>">
                         <div>
                             <label for="title" class="mb-2 block text-sm font-semibold text-slate-700">Election title <span class="text-rose-600">*</span></label>
-                            <input id="title" name="title" type="text" value="Student Council Election 2026" placeholder="Enter election title" required class="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-purple-500 focus:ring-4 focus:ring-purple-100">
+                            <input id="title" name="title" type="text" value="<?= $election['title'] ?>" placeholder="Enter election title" required class="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-purple-500 focus:ring-4 focus:ring-purple-100">
                         </div>
 
                         <div>
                             <label for="description" class="mb-2 block text-sm font-semibold text-slate-700">Description <span class="text-rose-600">*</span></label>
-                            <textarea id="description" name="description" rows="5" required placeholder="Describe the purpose and details of this election" class="block w-full resize-y rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-purple-500 focus:ring-4 focus:ring-purple-100">Vote to elect the student representatives for the 2026 academic year.</textarea>
+                            <textarea id="description" name="description" rows="5" required placeholder="Describe the purpose and details of this election" class="block w-full resize-y rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-purple-500 focus:ring-4 focus:ring-purple-100"><?= $election['description'] ?></textarea>
                             <p class="mt-2 text-xs text-slate-500">Provide a clear summary so voters understand the purpose of this election.</p>
                         </div>
 
                         <div class="grid gap-5 sm:grid-cols-2">
                             <div>
                                 <label for="start_date" class="mb-2 block text-sm font-semibold text-slate-700">Start date and time <span class="text-rose-600">*</span></label>
-                                <input id="start_date" name="start_date" type="datetime-local" value="2026-11-10T09:00" required class="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-purple-500 focus:ring-4 focus:ring-purple-100">
+                                <input id="start_date" name="start_date" type="datetime-local" value="<?= $election['start_date'] ?>" required class="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-purple-500 focus:ring-4 focus:ring-purple-100">
                             </div>
                             <div>
                                 <label for="end_date" class="mb-2 block text-sm font-semibold text-slate-700">End date and time <span class="text-rose-600">*</span></label>
-                                <input id="end_date" name="end_date" type="datetime-local" value="2026-11-10T17:00" required class="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-purple-500 focus:ring-4 focus:ring-purple-100">
+                                <input id="end_date" name="end_date" type="datetime-local" value="<?= $election['end_date'] ?>" required class="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-purple-500 focus:ring-4 focus:ring-purple-100">
                             </div>
                         </div>
 
                         <div>
                             <label for="status" class="mb-2 block text-sm font-semibold text-slate-700">Election status <span class="text-rose-600">*</span></label>
                             <select id="status" name="status" required class="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-purple-500 focus:ring-4 focus:ring-purple-100">
-                                <option value="upcoming" selected>Upcoming</option>
-                                <option value="ongoing">Ongoing</option>
-                                <option value="completed">Completed</option>
+                                <option value="upcoming"
+                                    <?= $election['status'] === 'upcoming' ? 'selected' : '' ?>>Upcoming</option>
+                                <option value="ongoing"
+                                    <?= $election['status'] === 'ongoing' ? 'selected' : '' ?>>Ongoing</option>
+                                <option value="completed"
+                                    <?= $election['status'] === 'completed' ? 'selected' : '' ?>>Completed</option>
                             </select>
                             <p class="mt-2 text-xs leading-5 text-slate-500">Validate the selected status and date rules in your backend before saving.</p>
                         </div>
 
                         <div class="flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
                             <a href="../common/elections.php" class="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">Cancel</a>
-                            <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-700 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-200">
-                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" />
-                                </svg>
-                                Update election
-                            </button>
+
+                            <?php if ($election['status'] === 'completed' || $election['status'] === 'ongoing'): ?>
+                                <p class="mt-2 text-xs leading-5 text-red-500">You can not updated the election details which is completed or in progress.</p>
+                            <?php else: ?>
+                                <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-purple-700 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-200">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7" />
+                                    </svg>
+                                    Update election
+                                </button>
+                            <?php endif; ?>
                         </div>
                     </form>
                 </section>

@@ -32,8 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $hashed_password,
             $role
         ]);
-
-        echo "<script>alert('user added')</script>";
+        header('Location: ' . app_url('views/auth/login.php'));
+        exit();
     }
 }
 ?>
@@ -206,7 +206,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                 <input type="text" id="identityNumber" name="identity_number"
                                     placeholder="Identity number"
-                                    maxlength="20" autocomplete="off"
+                                    maxlength="13" autocomplete="off"
                                     class="sm:col-span-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-purple-600 focus:ring-4 focus:ring-purple-100">
                             </div>
 
@@ -359,9 +359,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <a href="<?= htmlspecialchars(app_url(), ENT_QUOTES, 'UTF-8') ?>" class="ml-1 font-semibold text-purple-700 hover:underline">Back to Home</a>
         </p>
     </main>
-
-    <script src="<?= htmlspecialchars(app_url('assets/js/register.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
-
+    <script src="<?= htmlspecialchars(app_url('public/js/register.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
 </body>
 
 </html>

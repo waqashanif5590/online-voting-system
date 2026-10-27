@@ -1,3 +1,23 @@
+<?php
+require_once __DIR__ . '/../../app/paths.php';
+session_start();
+require_once APP_ROOT . '/app/config/database.php';
+require_once APP_ROOT . '/views/auth/check_auth.php';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $title = $_POST['title'];
+    $description = $_POST['description'];
+    $start_date = $_POST['start_date'];
+    $end_date = $_POST['end_date'];
+    $status = $_POST['status'];
+    $stmt = $pdo->prepare("INSERT INTO elections (title, description, start_date, end_date, status) VALUES
+    (?,?,?,?,?)");
+    $isInserted = $stmt->execute([$title, $description, $start_date, $end_date, $status]);
+    if ($isInserted) {
+        echo '<script>alert("New election was added successfully")</script>';
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -17,7 +37,7 @@
                     <h1 class="mt-1 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Create a new election</h1>
                     <p class="mt-1 text-sm text-slate-500">Enter the details to set up an election.</p>
                 </div>
-                <a href="elections.php" class="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-slate-100">
+                <a href="../common/elections.php" class="inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-slate-100">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5m7 7-7-7 7-7" />
                     </svg>
@@ -45,7 +65,7 @@
                     </div>
 
                     <!-- Static form only. Connect this form to your backend when ready. -->
-                    <form action="" method="POST" class="space-y-6 px-5 py-6 sm:px-8 sm:py-8">
+                    <form action="./create_election.php" method="POST" class="space-y-6 px-5 py-6 sm:px-8 sm:py-8">
                         <div>
                             <label for="title" class="mb-2 block text-sm font-semibold text-slate-700">Election title <span class="text-rose-600">*</span></label>
                             <input

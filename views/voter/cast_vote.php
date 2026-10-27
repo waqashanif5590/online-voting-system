@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt = $pdo->prepare("UPDATE voters SET has_voted=true WHERE token=? AND user_id=?");
         $isVoted = $stmt->execute([$entered_token, $_SESSION['user_id']]);
         if ($isVoted) {
-            header('Location: dashboard.php');
+            header('Location: ' . app_url('views/voter/dashboard.php'));
             exit();
         }
     }

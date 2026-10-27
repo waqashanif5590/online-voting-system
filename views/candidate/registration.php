@@ -101,7 +101,7 @@ $pageDescription = $candidate
                 if ($candidate) {
                     $applicationCandidateId = (int) $candidate['id'];
                     $showReviewActions = false;
-                    include APP_ROOT . '/includes/candidate/submitted_application.php';
+                    include APP_ROOT . '/includes/shared/submitted_application.php';
                 } else {
                     include APP_ROOT . '/includes/candidate/registration_form.php';
                 }

@@ -10,14 +10,14 @@ if ($portalRole === '') {
 
 $portalNavigation = [
     'admin' => [
-        ['label' => 'Dashboard', 'href' => 'views/admin/dashboard.php#dashboard', 'pages' => ['dashboard.php']],
+        ['label' => 'Dashboard', 'href' => 'views/admin/dashboard.php', 'pages' => ['dashboard.php']],
         ['label' => 'Elections', 'href' => 'views/common/elections.php', 'pages' => ['elections.php']],
         ['label' => 'Voters', 'href' => 'views/admin/voters.php', 'pages' => ['voters.php']],
         ['label' => 'Candidates', 'href' => 'views/admin/candidates.php', 'pages' => ['candidates.php']],
-        ['label' => 'Applications', 'href' => 'views/admin/dashboard.php#applications', 'pages' => []],
-        ['label' => 'Positions', 'href' => 'views/admin/dashboard.php#positions', 'pages' => []],
-        ['label' => 'Political Parties', 'href' => 'views/admin/dashboard.php#parties', 'pages' => []],
-        ['label' => 'Election Results', 'href' => 'views/admin/dashboard.php#election-results', 'pages' => []],
+        ['label' => 'Applications', 'href' => 'views/admin/candidates.php', 'pages' => ['candidates.php']],
+        ['label' => 'Positions', 'href' => 'views/admin/positions.php', 'pages' => ['positions.php']],
+        ['label' => 'Political Parties', 'href' => 'views/admin/parties.php', 'pages' => ['parties.php']],
+        ['label' => 'Election Results', 'href' => 'views/admin/results.php', 'pages' => ['results.php']],
     ],
     'candidate' => [
         ['label' => 'Dashboard', 'href' => 'views/candidate/dashboard.php', 'pages' => ['dashboard.php']],
@@ -57,8 +57,8 @@ $portalHome = $portalNavigation[$portalRole][0]['href'];
             <a href="<?= htmlspecialchars(app_url($item['href']), ENT_QUOTES, 'UTF-8') ?>"
                 <?= $isActive ? 'aria-current="page"' : '' ?>
                 class="rounded-xl px-4 py-3 text-sm font-semibold transition <?= $isActive
-                    ? 'bg-purple-50 text-purple-800 ring-1 ring-inset ring-purple-100'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-purple-700' ?>">
+                                                                                    ? 'bg-purple-50 text-purple-800 ring-1 ring-inset ring-purple-100'
+                                                                                    : 'text-slate-600 hover:bg-slate-50 hover:text-purple-700' ?>">
                 <?= htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8') ?>
             </a>
         <?php endforeach; ?>

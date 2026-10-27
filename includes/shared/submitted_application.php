@@ -167,57 +167,10 @@ $submittedAt = !empty($application['created_at'])
 
             <?php if ($status === 'pending'): ?>
                 <div class="mt-5 flex flex-wrap gap-3">
-                    <form
-                        action="<?= htmlspecialchars(
-                                    app_url('views/admin/review_application.php'),
-                                    ENT_QUOTES,
-                                    'UTF-8'
-                                ) ?>"
-                        method="POST">
-                        <input
-                            type="hidden"
-                            name="candidate_id"
-                            value="<?= (int) $applicationCandidateId ?>">
-
-                        <input
-                            type="hidden"
-                            name="decision"
-                            value="approved">
-
-                        <button
-                            type="submit"
-                            class="rounded-xl bg-green-600 px-5 py-2.5
-                               text-sm font-bold text-white
-                               hover:bg-green-700">
-                            Approve Application
-                        </button>
-                    </form>
-
-                    <form
-                        action="<?= htmlspecialchars(
-                                    app_url('views/admin/review_application.php'),
-                                    ENT_QUOTES,
-                                    'UTF-8'
-                                ) ?>"
-                        method="POST">
-                        <input
-                            type="hidden"
-                            name="candidate_id"
-                            value="<?= (int) $applicationCandidateId ?>">
-
-                        <input
-                            type="hidden"
-                            name="decision"
-                            value="rejected">
-
-                        <button
-                            type="submit"
-                            class="rounded-xl bg-red-600 px-5 py-2.5
-                               text-sm font-bold text-white
-                               hover:bg-red-700">
-                            Reject Application
-                        </button>
-                    </form>
+                    <a href="../../app/controllers/actions.php?candidate=<?= $applicationCandidateId ?>&approve=true"
+                        class="rounded-lg bg-green-50 px-2.5 py-1.5 text-xs font-bold text-green-700">Approve</a>
+                    <a href="../../app/controllers/actions.php?candidate=<?= $applicationCandidateId ?>&approve=false"
+                        class="rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-bold text-red-700">Reject</a>
                 </div>
             <?php else: ?>
                 <p class="mt-4 text-sm font-semibold text-slate-600">
