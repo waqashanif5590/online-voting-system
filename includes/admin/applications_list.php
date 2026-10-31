@@ -48,9 +48,9 @@
 
                 foreach ($candidates as $key => $candidate) {
                     echo ' <tr>
-                                    <td class="px-6 py-4 font-semibold text-slate-800">' . $candidate['username'] . '</td>
-                                    <td class="px-6 py-4 text-slate-600">' . $candidate['election'] . '</td>
-                                    <td class="px-6 py-4 text-slate-600">' . $candidate['position'] . '</td>
+                                    <td class="px-6 py-4 font-semibold text-slate-800">' . cleanText((string) $candidate['username']) . '</td>
+                                    <td class="px-6 py-4 text-slate-600">' . cleanText((string) $candidate['election']) . '</td>
+                                    <td class="px-6 py-4 text-slate-600">' . cleanText((string) $candidate['position']) . '</td>
                                     <td class="px-6 py-4"><span
                                             class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold ' . $statusColors[$candidate['status']] . '">' . ucfirst($candidate['status']) . '</span>
                                     </td>
@@ -59,9 +59,9 @@
                                         <a href="../../views/admin/application_details.php?candidate='
                         . $candidate['candidate_id'] . '" class="font-semibold text-blue-700 hover:underline">View</a>';
                     if ($candidate['status'] === 'pending') {
-                        echo '<a href="../../app/controllers/actions.php?candidate=' . $candidate['candidate_id'] . '&approve=true"
+                        echo '<a href="../../app/controllers/actions.php?candidate=' . $candidate['candidate_id'] . '&approve=true&csrf_token=' . urlencode(getCsrfToken()) . '"
                                                     class="rounded-lg bg-green-50 px-2.5 py-1.5 text-xs font-bold text-green-700">Approve</a>
-                                                    <a href="../../app/controllers/actions.php?candidate=' . $candidate['candidate_id'] . '&approve=false"
+                                                    <a href="../../app/controllers/actions.php?candidate=' . $candidate['candidate_id'] . '&approve=false&csrf_token=' . urlencode(getCsrfToken()) . '"
                                                     class="rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-bold text-red-700">Reject</a>';
                     }
                     echo ' </div>

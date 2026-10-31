@@ -1,8 +1,10 @@
 <?php
 require_once __DIR__ . '/../../app/paths.php';
 require_once APP_ROOT . '/app/config/database.php';
+require_once APP_ROOT . '/app/helpers/security.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    checkCsrfToken();
     $name = $_POST['name'];
     $email = $_POST['email'];
     $identity_type = $_POST['identity_type'];
@@ -10,7 +12,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $dob = $_POST['dob'];
     $gender = $_POST['gender'];
     $password = $_POST['password'];
-    $role = $_POST['role'];
+    $role = $_POST['role'] ?? '';
+
+    if ($role !== 'voter' && $role !== 'candidate') {
+        $role = '';
+        echo 'Please choose a valid account role.';
+    } else {
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
     // Find email if already exists
@@ -34,6 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
         header('Location: ' . app_url('views/auth/login.php'));
         exit();
+    }
     }
 }
 ?>
@@ -140,6 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <form action="<?= htmlspecialchars(app_url('views/auth/register.php'), ENT_QUOTES, 'UTF-8') ?>" method="POST" id="registrationForm" class="space-y-5">
+                        <?= csrfInput() ?>
 
                         <!-- Profile Image -->
                         <div>

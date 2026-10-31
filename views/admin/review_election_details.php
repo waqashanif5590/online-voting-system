@@ -2,7 +2,8 @@
 require_once __DIR__ . '/../../app/paths.php';
 session_start();
 require_once APP_ROOT . '/app/config/database.php';
-require_once APP_ROOT . '/views/auth/check_auth.php';
+require_once APP_ROOT . '/app/helpers/security.php';
+requireRole('admin');
 
 $electionId = filter_input(INPUT_GET, 'election', FILTER_VALIDATE_INT);
 $stmt = $pdo->prepare("SELECT * FROM elections WHERE id=?");
@@ -29,6 +30,7 @@ $stmt->execute();
 $positions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    checkCsrfToken();
     $title = $_POST['title'];
     $description = $_POST['description'];
     $start_date = $_POST['start_date'];
@@ -106,6 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                     <!-- Static form: connect its action and values to your backend later. -->
                     <form action="<?= $election['status'] === 'upcoming' ? './review_election_details.php' : '' ?>" method="POST" class="space-y-6 px-5 py-6 sm:px-8 sm:py-8">
+                        <?= csrfInput() ?>
                         <input type="hidden" name="election_id" value="<?= $election['id'] ?>">
                         <div>
                             <label for="title" class="mb-2 block text-sm font-semibold text-slate-700">Election title <span class="text-rose-600">*</span></label>

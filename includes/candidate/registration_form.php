@@ -22,6 +22,7 @@ echo '<div class="mx-auto max-w-5xl">
                 </div>
 
                 <form action="' . htmlspecialchars(app_url('views/candidate/registration.php'), ENT_QUOTES, 'UTF-8') . '" method="post" id="candidateForm" class="space-y-8">
+                    ' . csrfInput() . '
 
                     
                     <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">

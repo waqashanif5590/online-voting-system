@@ -1,7 +1,8 @@
 <?php
 require_once __DIR__ . '/../../app/paths.php';
 session_start();
-require_once APP_ROOT . '/views/auth/check_auth.php';
+require_once APP_ROOT . '/app/helpers/security.php';
+requireRole('candidate');
 
 if (empty($_SESSION['login']) || $_SESSION['login'] !== true || empty($_SESSION['user_id'])) {
     header('Location: ' . app_url('views/auth/login.php'));
@@ -11,6 +12,7 @@ if (empty($_SESSION['login']) || $_SESSION['login'] !== true || empty($_SESSION[
 require_once APP_ROOT . '/app/config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    checkCsrfToken();
     $username = $_POST['name'] ?? '';
     $email = $_POST['email'] ?? '';
     $identityType = $_POST['identity_type'] ?? '';
@@ -79,6 +81,7 @@ $pageDescription = 'Review and update the personal details associated with your 
                             <h2 class="text-lg font-bold text-slate-900">Account Information</h2>
                         </div>
                         <form action="<?= htmlspecialchars(app_url('views/candidate/profile.php'), ENT_QUOTES, 'UTF-8') ?>" method="post">
+                            <?= csrfInput() ?>
                             <div class="grid gap-x-8 gap-y-6 p-6 sm:grid-cols-2 sm:p-8">
                                 <div>
                                     <label for="fullName" class="mb-2 block text-sm font-semibold text-slate-700">Full name</label>

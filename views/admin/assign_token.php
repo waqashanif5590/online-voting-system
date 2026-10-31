@@ -2,7 +2,8 @@
 require_once __DIR__ . '/../../app/paths.php';
 session_start();
 require_once APP_ROOT . '/app/config/database.php';
-require_once APP_ROOT . '/views/auth/check_auth.php';
+require_once APP_ROOT . '/app/helpers/security.php';
+requireRole('admin');
 if (isset($_GET['user'])) {
     $stmt = $pdo->prepare("SELECT * FROM users WHERE id=?");
     $stmt->execute([$_GET['user']]);
@@ -28,6 +29,7 @@ $stmt->execute(['upcoming']);
 $elections = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    checkCsrfToken();
     $voter = $_GET['user'];
     $election = $_POST['election'];
     $token = $_POST['token'];
@@ -73,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <a href="dashboard.php#voters" class="inline-flex items-center gap-2 text-sm font-semibold text-purple-700 hover:text-purple-900">&larr; Back to Voters</a>
 
                     <form action="./assign_token.php?user=<?= $_GET['user'] ?>" method="post" class="grid gap-6 lg:grid-cols-2 lg:items-start">
+                        <?= csrfInput() ?>
                         <div class="space-y-6">
                             <section aria-labelledby="voter-heading"
                                 class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">

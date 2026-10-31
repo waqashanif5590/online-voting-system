@@ -2,7 +2,8 @@
 require_once __DIR__ . '/../../app/paths.php';
 session_start();
 require_once APP_ROOT . '/app/config/database.php';
-require_once APP_ROOT . '/views/auth/check_auth.php';
+require_once APP_ROOT . '/app/helpers/security.php';
+requireRole('candidate');
 
 $message = '';
 $stmt = $pdo->prepare("SELECT * FROM `applications` WHERE user_id=?");
@@ -21,23 +22,31 @@ if ($candidate) {
     $stmt->execute(['upcoming']);
     $elections = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Positions for candidate registration
-    $stmt = $pdo->prepare("SELECT positions.title AS title,
-    election_positions.position_id AS id
-    FROM election_positions
-    INNER JOIN positions ON election_positions.position_id=positions.id");
-    $stmt->execute();
-    $positions = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Parties for candidate registration
-    $stmt = $pdo->prepare("SELECT parties.name AS name,
-    election_parties.party_id AS id
-    FROM election_parties
-    INNER JOIN parties ON election_parties.party_id=parties.id");
-    $stmt->execute();
-    $parties = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $positions = [];
+    $parties = [];
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        checkCsrfToken();
+        $election_id = (int) ($_POST['election_id'] ?? 0);
+
+        $stmt = $pdo->prepare("
+        SELECT p.id, p.title
+        FROM election_positions ep
+        INNER JOIN positions p ON ep.position_id = p.id
+        WHERE ep.election_id = ?
+    ");
+        $stmt->execute([$election_id]);
+        $positions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmt = $pdo->prepare("
+        SELECT p.id, p.name
+        FROM election_parties ep
+        INNER JOIN parties p ON ep.party_id = p.id
+        WHERE ep.election_id = ?
+    ");
+        $stmt->execute([$election_id]);
+        $parties = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
         $user_id = $_SESSION['user_id'];
         $address = $_POST['address'];
         $city = $_POST['city'];
@@ -109,6 +118,10 @@ $pageDescription = $candidate
                     $showReviewActions = false;
                     include APP_ROOT . '/includes/shared/submitted_application.php';
                 } else {
+                    $data;
+                    $elections;
+                    $positions;
+                    $parties;
                     include APP_ROOT . '/includes/candidate/registration_form.php';
                 }
                 ?>
@@ -121,7 +134,7 @@ $pageDescription = $candidate
     <footer class="border-t border-slate-200 bg-white px-5 py-6 text-center text-sm text-slate-500">
         &copy; <span id="year"></span> Online Voting System. All rights reserved.
     </footer>
-
+    <script src="<?= htmlspecialchars(app_url('public/js/candidate-registration.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
 </body>
 
 </html>

@@ -89,7 +89,7 @@
                                         <td class="px-5 py-4">
                                             <div class="flex items-center gap-2"><a href="#voters"
                                                     class="font-semibold text-blue-700 hover:underline">View</a>
-                                                    <a href="../../app/controllers/actions.php?voter=' . $voter['user_id'] . '"
+                                                    <a href="../../app/controllers/actions.php?voter=' . $voter['user_id'] . '&csrf_token=' . urlencode(getCsrfToken()) . '"
                                                     class="rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-bold text-red-700">'
                         . $btn_text .
                         '

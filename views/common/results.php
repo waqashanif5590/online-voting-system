@@ -1,8 +1,8 @@
 <?php
 require_once __DIR__ . '/../../app/paths.php';
-session_start();
 require_once APP_ROOT . '/app/config/database.php';
-require_once APP_ROOT . '/views/auth/check_auth.php';
+require_once APP_ROOT . '/app/helpers/security.php';
+requireLogin();
 $portalRole = $_SESSION['user_role'] ?? '';
 $pageTitle = 'Election Results';
 $pageDescription = 'Review published election results and compare candidates by position.';

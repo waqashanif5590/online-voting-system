@@ -2,9 +2,11 @@
 require_once __DIR__ . '/../../app/paths.php';
 session_start();
 require_once APP_ROOT . '/app/config/database.php';
-require_once APP_ROOT . '/views/auth/check_auth.php';
+require_once APP_ROOT . '/app/helpers/security.php';
+requireRole('admin');
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    checkCsrfToken();
     $title = $_POST['title'];
     $description = $_POST['description'];
     $start_date = $_POST['start_date'];
@@ -90,6 +92,7 @@ $positions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                     <!-- Static form only. Connect this form to your backend when ready. -->
                     <form action="./create_election.php" method="POST" class="space-y-6 px-5 py-6 sm:px-8 sm:py-8">
+                        <?= csrfInput() ?>
                         <div>
                             <label for="title" class="mb-2 block text-sm font-semibold text-slate-700">Election title <span class="text-rose-600">*</span></label>
                             <input

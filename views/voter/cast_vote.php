@@ -1,8 +1,8 @@
 <?php
 require_once __DIR__ . '/../../app/paths.php';
-session_start();
 require_once APP_ROOT . '/app/config/database.php';
-require_once APP_ROOT . '/views/auth/check_auth.php';
+require_once APP_ROOT . '/app/helpers/security.php';
+requireRole('voter');
 
 if (isset($_GET['token'])) {
     $stmt = $pdo->prepare("SELECT * FROM voters WHERE token = ?");
@@ -37,6 +37,7 @@ $candidates = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Casting Vote method
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    checkCsrfToken();
     $enteredToken = trim($_POST['entered_token'] ?? '');
     $electionId = filter_input(INPUT_POST, 'election_id', FILTER_VALIDATE_INT);
     $selections = $_POST['candidate'] ?? [];
@@ -346,6 +347,7 @@ $pageDescription = 'Review the candidates and securely submit your choice for th
                             <form
                                 action="cast_vote.php?token=<?= urlencode($voter['token']) ?>"
                                 method="POST">
+                                <?= csrfInput() ?>
                                 <input
                                     type="hidden"
                                     name="election_id"

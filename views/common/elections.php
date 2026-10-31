@@ -1,8 +1,8 @@
 <?php
 require_once __DIR__ . '/../../app/paths.php';
-session_start();
 require_once APP_ROOT . '/app/config/database.php';
-require_once APP_ROOT . '/views/auth/check_auth.php';
+require_once APP_ROOT . '/app/helpers/security.php';
+requireLogin();
 
 date_default_timezone_set('Asia/Karachi');
 $today = new DateTime('now');
@@ -137,7 +137,7 @@ $pageDescription = 'Explore election schedules and check the current status of e
                                                     $today <= $endDate &&
                                                     $status === 'upcoming'
                                                 ): ?>
-                                                    <a href="<?= htmlspecialchars(app_url('app/controllers/actions.php?golive=' . $election['id']), ENT_QUOTES, 'UTF-8') ?>"
+                                                    <a href="<?= htmlspecialchars(app_url('app/controllers/actions.php?golive=' . $election['id'] . '&csrf_token=' . urlencode(getCsrfToken())), ENT_QUOTES, 'UTF-8') ?>"
                                                         class="inline-flex items-center justify-center rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1.5 text-[11px] font-bold text-purple-800 transition hover:bg-purple-100 focus:outline-none focus:ring-4 focus:ring-purple-100">
                                                         Go Live
                                                     </a>
@@ -150,7 +150,7 @@ $pageDescription = 'Explore election schedules and check the current status of e
                                                 <?= $escape($election['title'] ?? 'Untitled election') ?>
                                             </h3>
                                             <?php if ($portalRole === 'admin'): ?>
-                                                <a href="<?= htmlspecialchars(app_url('app/controllers/actions.php?delete=' . $election['id']), ENT_QUOTES, 'UTF-8') ?>">Delete</a>
+                                                <a href="<?= htmlspecialchars(app_url('app/controllers/actions.php?delete=' . $election['id'] . '&csrf_token=' . urlencode(getCsrfToken())), ENT_QUOTES, 'UTF-8') ?>">Delete</a>
                                             <?php endif; ?>
                                         </div>
                                         <p class="mt-2 min-h-12 whitespace-pre-line text-sm leading-6 text-slate-600">
@@ -205,7 +205,7 @@ $pageDescription = 'Explore election schedules and check the current status of e
 
                                             <?php if ($portalRole === 'admin'): ?>
                                                 <?php if ($status === 'ongoing'): ?>
-                                                    <a href="<?= htmlspecialchars(app_url('app/controllers/actions.php?election=' . $election['id']), ENT_QUOTES, 'UTF-8') ?>" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-sm font-bold text-purple-800 mb-2 transition hover:bg-purple-100 focus:outline-none focus:ring-4 focus:ring-purple-100">
+                                                    <a href="<?= htmlspecialchars(app_url('app/controllers/actions.php?election=' . $election['id'] . '&csrf_token=' . urlencode(getCsrfToken())), ENT_QUOTES, 'UTF-8') ?>" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-sm font-bold text-purple-800 mb-2 transition hover:bg-purple-100 focus:outline-none focus:ring-4 focus:ring-purple-100">
                                                         Stop & Mark Completed
                                                         <span aria-hidden="true">&rarr;</span>
                                                     </a>

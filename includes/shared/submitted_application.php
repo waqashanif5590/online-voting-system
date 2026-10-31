@@ -167,9 +167,9 @@ $submittedAt = !empty($application['created_at'])
 
             <?php if ($status === 'pending'): ?>
                 <div class="mt-5 flex flex-wrap gap-3">
-                    <a href="../../app/controllers/actions.php?candidate=<?= $applicationCandidateId ?>&approve=true"
+                    <a href="../../app/controllers/actions.php?candidate=<?= $applicationCandidateId ?>&approve=true&csrf_token=<?= urlencode(getCsrfToken()) ?>"
                         class="rounded-lg bg-green-50 px-2.5 py-1.5 text-xs font-bold text-green-700">Approve</a>
-                    <a href="../../app/controllers/actions.php?candidate=<?= $applicationCandidateId ?>&approve=false"
+                    <a href="../../app/controllers/actions.php?candidate=<?= $applicationCandidateId ?>&approve=false&csrf_token=<?= urlencode(getCsrfToken()) ?>"
                         class="rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-bold text-red-700">Reject</a>
                 </div>
             <?php else: ?>

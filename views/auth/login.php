@@ -1,8 +1,10 @@
 <?php
 require_once __DIR__ . '/../../app/paths.php';
 require_once APP_ROOT . '/app/config/database.php';
+require_once APP_ROOT . '/app/helpers/security.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    checkCsrfToken();
     $email = $_POST['email'];
     $password = $_POST['password'];
 
@@ -16,11 +18,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         if (password_verify($password, $user['password'])) {
             session_start();
+            session_regenerate_id(true);
             $_SESSION['login'] = true;
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_email'] = $user['email'];
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['user_role'] = $user['role'];
+            $_SESSION['status'] = $user['status'];
             if ($user['role'] === 'voter') {
                 header('Location: ' . app_url('views/voter/dashboard.php'));
                 exit;
@@ -140,6 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <form action="<?= htmlspecialchars(app_url('views/auth/login.php'), ENT_QUOTES, 'UTF-8') ?>" method="POST" id="registrationForm" class="space-y-5">
+                        <?= csrfInput() ?>
 
 
                         <!-- Email -->

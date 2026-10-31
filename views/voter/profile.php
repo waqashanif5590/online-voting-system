@@ -1,8 +1,8 @@
 <?php
 require_once __DIR__ . '/../../app/paths.php';
-session_start();
-require_once APP_ROOT . '/views/auth/check_auth.php';
 require_once APP_ROOT . '/app/config/database.php';
+require_once APP_ROOT . '/app/helpers/security.php';
+requireRole('voter');
 
 $stmt = $pdo->prepare(
     'SELECT name, email, identity_type, identity_number, dob, gender, role

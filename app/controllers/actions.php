@@ -1,7 +1,9 @@
 <?php
 require_once __DIR__ . '/../../app/paths.php';
-session_start();
+require_once APP_ROOT . '/app/helpers/security.php';
 require_once APP_ROOT . '/app/config/database.php';
+requireRole('admin');
+checkCsrfToken();
 if (isset($_GET['approve'], $_GET['candidate'])) {
     if ($_GET['approve'] === 'true') {
         $stmt = $pdo->prepare("UPDATE applications SET status=? WHERE id=?");
