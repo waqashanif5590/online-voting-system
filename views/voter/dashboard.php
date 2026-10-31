@@ -14,7 +14,6 @@ $username = ucfirst($firstname) . ' ' . ucfirst($lastname);
 
 $stmt = $pdo->prepare("SELECT voters.token AS token_number,
                     voters.has_voted AS token_status,
-                    voters.casted_at AS vote_date,
                     elections.title AS election,
                     elections.start_date AS election_start_date,
                     elections.end_date AS election_end_date,
@@ -28,7 +27,6 @@ $voter_data = $stmt->fetch(PDO::FETCH_ASSOC);
 
 $stmt = $pdo->prepare("SELECT
                 voters.has_voted AS token_status,
-                voters.casted_at AS vote_date,
                 elections.title AS election
                 FROM voters
                 INNER JOIN elections
@@ -284,9 +282,8 @@ $pageDescription = 'Track your election participation, voting token, and recent 
                                     echo '  <tr>
                                     <td class="px-5 py-4 font-medium text-slate-700 sm:px-6">
                                     ' . $votingHistory['election'] . '</td>
-                                    <td class="whitespace-nowrap px-5 py-4 text-slate-500">'
-                                        . date('F d, Y - h:i A', strtotime($votingHistory['vote_date'])) .
-                                        '</td>
+                                    <td class="whitespace-nowrap px-5 py-4 text-slate-500">
+                                        </td>
                                     <td class="px-5 py-4 sm:px-6"><span class="inline-flex rounded-full'
                                         . $statusColors[$votingHistory['token_status']] . ' px-2.5 py-1 text-xs font-semibold">'
                                         . $votingHistory['token_status'] == true ? 'Voted' : 'Not Participated' .

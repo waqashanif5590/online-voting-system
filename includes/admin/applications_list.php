@@ -16,25 +16,25 @@
                 'rejected' => 'bg-red-50 text-red-700'
             ];
             if ($limit == false) {
-                $candidates = $pdo->query("SELECT candidates.status AS status, 
-                                candidates.id AS candidate_id, 
+                $candidates = $pdo->query("SELECT applications.status AS status, 
+                                applications.id AS candidate_id, 
                                 users.name AS username,
                                 elections.title AS election,
-                                positions.title AS position FROM candidates
-                                INNER JOIN users ON candidates.user_id=users.id
-                                INNER JOIN elections ON candidates.election_id=elections.id
-                                INNER JOIN positions ON candidates.position_id=positions.id
+                                positions.title AS position FROM applications
+                                INNER JOIN users ON applications.user_id=users.id
+                                INNER JOIN elections ON applications.election_id=elections.id
+                                INNER JOIN positions ON applications.position_id=positions.id
                                 ")->fetchAll();
             } else {
 
-                $candidates = $pdo->query("SELECT candidates.status AS status, 
-                                        candidates.id AS candidate_id, 
+                $candidates = $pdo->query("SELECT applications.status AS status, 
+                                        applications.id AS candidate_id, 
                                         users.name AS username,
                                         elections.title AS election,
-                                        positions.title AS position FROM candidates
-                                        INNER JOIN users ON candidates.user_id=users.id
-                                        INNER JOIN elections ON candidates.election_id=elections.id
-                                        INNER JOIN positions ON candidates.position_id=positions.id
+                                        positions.title AS position FROM applications
+                                        INNER JOIN users ON applications.user_id=users.id
+                                        INNER JOIN elections ON applications.election_id=elections.id
+                                        INNER JOIN positions ON applications.position_id=positions.id
                                         LIMIT 4
                                         ")->fetchAll();
             }

@@ -172,11 +172,21 @@ $pageDescription = 'Explore election schedules and check the current status of e
                                         <div class="mt-6 border-t border-slate-100 pt-5">
                                             <?php if ($status === 'upcoming'): ?>
                                                 <?php if ($portalRole === 'candidate'): ?>
-
-                                                    <a href="<?= htmlspecialchars(app_url('views/candidate/registration.php'), ENT_QUOTES, 'UTF-8') ?>" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-700 px-4 py-3 text-sm font-bold text-white transition hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-200">
+                                                    <?php $stmt = $pdo->prepare("SELECT id FROM applications WHERE user_id=? AND election_id=?");
+                                                    $stmt->execute([$_SESSION['user_id'], $election['id']]);
+                                                    if ($stmt->fetch(PDO::FETCH_ASSOC)) {
+                                                        echo '<div class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-200 px-4 py-3 text-sm font-bold text-purple-400 cursor-not-allowed">
+                                                        Already Applied
+                                                        <span aria-hidden="true">&rarr;</span>
+                                                    </div>';
+                                                    } else echo '
+                                                    <a href="'.
+                                                    htmlspecialchars(app_url('views/candidate/registration.php'), ENT_QUOTES, 'UTF-8').'" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-700 px-4 py-3 text-sm font-bold text-white transition hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-200">
                                                         Apply for candidacy
                                                         <span aria-hidden="true">&rarr;</span>
-                                                    </a>
+                                                    </a>'
+                                                    ?>
+
                                                 <?php else: ?>
                                                     <span class="inline-flex w-full items-center justify-center rounded-xl bg-orange-50 px-4 py-3 text-sm font-bold text-orange-700 mb-2">
                                                         Comming Soon

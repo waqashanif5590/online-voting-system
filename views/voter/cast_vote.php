@@ -19,69 +19,169 @@ $stmt->execute([$voter['election_id']]);
 $election = $stmt->fetch(PDO::FETCH_ASSOC);
 
 // Fetching candidates data
-$stmt = $pdo->prepare("SELECT candidates.id AS candidate_id,
+$stmt = $pdo->prepare("SELECT applications.id AS candidate_id,
         users.name AS candidate_name,
         parties.name AS party,
         positions.title AS position,
         positions.id AS position_id,
         elections.id AS election
-        FROM candidates
-        INNER JOIN users ON candidates.user_id=users.id
-        INNER JOIN parties ON candidates.party_id=parties.id
-        INNER JOIN positions ON candidates.position_id=positions.id
-        INNER JOIN elections ON candidates.election_id=elections.id
-        WHERE candidates.election_id=? AND candidates.status=?
+        FROM applications
+        INNER JOIN users ON applications.user_id=users.id
+        INNER JOIN parties ON applications.party_id=parties.id
+        INNER JOIN positions ON applications.position_id=positions.id
+        INNER JOIN elections ON applications.election_id=elections.id
+        WHERE applications.election_id=? AND applications.status=?
 ");
 $stmt->execute([$election['id'], 'approved']);
 $candidates = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Casting Vote method
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $enteredToken = trim($_POST['entered_token'] ?? '');
+    $electionId = filter_input(INPUT_POST, 'election_id', FILTER_VALIDATE_INT);
+    $selections = $_POST['candidate'] ?? [];
 
-    $entered_token = trim($_POST['entered_token'] ?? '');
-
-    $election_id = $_POST['election_id'] ?? '';
-    $candidate_id = $_POST['candidate_id'] ?? '';
-
-    $stmt = $pdo->prepare("SELECT position_id FROM candidates WHERE id=? AND election_id=?");
-    $stmt->execute([$candidate_id, $election_id]);
-    $candidate = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if (!$candidate) {
+    if (!$electionId || !is_array($selections) || empty($selections)) {
         http_response_code(400);
-        exit('Invalid candidate selected.');
+        exit('Invalid vote submission.');
     }
 
-    $position_id = $candidate['position_id'];
+    try {
+        $pdo->beginTransaction();
 
-    $stmt = $pdo->prepare("SELECT id FROM voters WHERE token=?
-     AND user_id=?
-     AND election_id=?
-     AND has_voted=0 LIMIT 1");
-    $stmt->execute([$entered_token, $_SESSION['user_id'], $election_id]);
-    if (!$stmt->fetch((PDO::FETCH_ASSOC))) {
-        echo "<script>alert('Token is incorrect')</script>";
-    } else {
+        // Lock the voter's election record to prevent duplicate submissions.
+        $stmt = $pdo->prepare("
+            SELECT id, has_voted
+            FROM voters
+            WHERE token = ?
+              AND user_id = ?
+              AND election_id = ?
+            LIMIT 1
+            FOR UPDATE
+        ");
+        $stmt->execute([
+            $enteredToken,
+            $_SESSION['user_id'],
+            $electionId
+        ]);
 
-        $stmt = $pdo->prepare("SELECT * FROM votes WHERE candidate_id=? AND election_id=?");
-        $stmt->execute([$candidate_id, $election_id]);
-        $has_votes = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($has_votes) {
-            $votes = $has_votes['vote_count'] + 1;
-            $stmt = $pdo->prepare("UPDATE votes SET vote_count=? WHERE candidate_id=? AND election_id=?");
-            $stmt->execute([$votes, $candidate_id, $election_id]);
-        } else {
-            $stmt = $pdo->prepare("INSERT INTO votes (election_id,candidate_id,position_id,vote_count) VALUES
-    (?,?,?,?)");
-            $stmt->execute([$election_id, $candidate_id, $position_id, 1]);
+        $voter = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$voter || (int) $voter['has_voted'] === 1) {
+            throw new RuntimeException('Token is invalid or has already been used.');
         }
 
-        $stmt = $pdo->prepare("UPDATE voters SET has_voted=true WHERE token=? AND user_id=?");
-        $isVoted = $stmt->execute([$entered_token, $_SESSION['user_id']]);
-        if ($isVoted) {
-            header('Location: ' . app_url('views/voter/dashboard.php'));
-            exit();
+        // Confirm the election is currently ongoing.
+        $stmt = $pdo->prepare("
+            SELECT id
+            FROM elections
+            WHERE id = ?
+              AND status = 'ongoing'
+              AND NOW() BETWEEN start_date AND end_date
+            LIMIT 1
+        ");
+        $stmt->execute([$electionId]);
+
+        if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+            throw new RuntimeException('This election is not currently open.');
         }
+
+        // Get the positions that have approved candidates in this election.
+        // This must match the positions shown by the voting page.
+        $stmt = $pdo->prepare("
+            SELECT DISTINCT position_id
+            FROM applications
+            WHERE election_id = ?
+              AND status = 'approved'
+        ");
+        $stmt->execute([$electionId]);
+
+        $requiredPositions = array_map(
+            'intval',
+            $stmt->fetchAll(PDO::FETCH_COLUMN)
+        );
+
+        // Require exactly one submitted candidate for each enabled position.
+        $submittedPositions = array_map('intval', array_keys($selections));
+        sort($requiredPositions);
+        sort($submittedPositions);
+       
+        if ($requiredPositions !== $submittedPositions) {
+            throw new RuntimeException('Please select one candidate for every position.');
+        }
+
+        foreach ($selections as $positionId => $applicationId) {
+            $positionId = filter_var($positionId, FILTER_VALIDATE_INT);
+            $applicationId = filter_var($applicationId, FILTER_VALIDATE_INT);
+
+            if (!$positionId || !$applicationId) {
+                throw new RuntimeException('Invalid candidate selection.');
+            }
+
+            // Confirm the candidate is approved and belongs to this
+            // election and the submitted position.
+            $stmt = $pdo->prepare("
+                SELECT id
+                FROM applications
+                WHERE id = ?
+                  AND election_id = ?
+                  AND position_id = ?
+                  AND status = 'approved'
+                LIMIT 1
+            ");
+            $stmt->execute([
+                $applicationId,
+                $electionId,
+                $positionId
+            ]);
+
+            if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+                throw new RuntimeException('A selected candidate is not valid for this election.');
+            }
+
+            // Store the candidate choice without storing the voter's ID.
+            $stmt = $pdo->prepare("
+                INSERT INTO votes (election_id, application_id, position_id)
+                VALUES (?, ?, ?)
+            ");
+            $stmt->execute([
+                $electionId,
+                $applicationId,
+                $positionId
+            ]);
+
+            // Record participation separately from the candidate choice.
+            $stmt = $pdo->prepare("
+                INSERT INTO voter_participation
+                    (voter_id, election_id, position_id)
+                VALUES (?, ?, ?)
+            ");
+            $stmt->execute([
+                $voter['id'],
+                $electionId,
+                $positionId
+            ]);
+        }
+
+        // Mark the voter as having submitted their ballot.
+        $stmt = $pdo->prepare("
+            UPDATE voters
+            SET has_voted = 1
+            WHERE id = ?
+        ");
+        $stmt->execute([$voter['id']]);
+
+        $pdo->commit();
+
+        header('Location: ' . app_url('views/voter/dashboard.php'));
+        exit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+        http_response_code(400);
+        exit(htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8'));
     }
 }
 ?>
@@ -217,7 +317,7 @@ $pageDescription = 'Review the candidates and securely submit your choice for th
                                     Available Candidates
                                 </h2>
                                 <p class="mt-1 text-sm text-slate-500">
-                                    Select one candidate to cast your vote.
+                                    Select one candidate for each position.
                                 </p>
                             </div>
 
@@ -226,128 +326,176 @@ $pageDescription = 'Review the candidates and securely submit your choice for th
                             </span>
                         </div>
 
-                        <!-- Candidate Selection Form -->
                         <?php
                         if ($voter['has_voted'] == true) {
                             echo 'Already vote casted';
-                        } else if ($election['status'] !== 'ongoing') {
+                        } elseif ($election['status'] !== 'ongoing') {
                             echo 'Election not started yet, will be live soon.';
+                        } elseif (empty($candidates)) {
+                            echo 'No candidates registered available for this election.';
                         } else {
-                            if (empty($candidates)) {
-                                echo 'No candidates registered available for this election.';
-                            } else {
+                            // Group candidates by position
+                            $candidatesByPosition = [];
 
-                                echo '
-                              <form action="cast_vote.php?token=' . urlencode($voter['token']) . '" method="POST">
-                             <input type="hidden" name="election_id" value="' . $election['id'] . '">
-
-                             <div class="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">';
-
-                                foreach ($candidates as $key => $candidate) {
-                                    $username = explode(' ', $candidate['candidate_name'], 2);
-                                    $firstname = $username[0];
-                                    $lastname = $username[1];
-                                    $username = ucfirst($firstname) . ' ' . ucfirst($lastname);
-                                    echo '
-                             <label class="group relative block cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="candidate_id"
-                                    value="' . $candidate['candidate_id'] . '"
-                                    required
-                                    class="peer sr-only">
-
-                                <div class="h-full rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-purple-300 hover:shadow-md peer-checked:border-purple-600 peer-checked:bg-purple-50/40 peer-focus-visible:ring-4 peer-focus-visible:ring-purple-200">
-
-                                    <div class="flex items-start justify-between gap-3">
-                                        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-100 text-xl font-bold text-purple-700">
-                                           ' . $firstname[0] . $lastname[0] . '
-                                        </div>
-
-                                        <div class="flex h-6 w-6 items-center justify-center rounded-full border-2 border-slate-300 text-white transition peer-checked:border-purple-700 peer-checked:bg-purple-700">
-                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="m5 12 4 4L19 6" />
-                                            </svg>
-                                        </div>
-                                    </div>
-
-                                    <p class="mt-5 text-xs font-semibold uppercase tracking-wider text-purple-700">
-                                        Candidate
-                                    </p>
-
-                                    <h3 class="mt-1 text-lg font-bold text-slate-900">
-                                   ' . $username . '
-                                    </h3>
-
-                                    <div class="mt-4 space-y-3 border-t border-slate-100 pt-4">
-                                        <div>
-                                            <p class="text-xs text-slate-500">Political Party</p>
-                                            <p class="mt-1 text-sm font-semibold text-slate-700">
-                                            ' . $candidate['party'] . '
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <p class="text-xs text-slate-500">Position</p>
-                                            <p class="mt-1 text-sm font-semibold text-slate-700">
-                                                ' . $candidate['position'] . '
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-5 flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm font-medium text-slate-600 peer-checked:bg-purple-100 peer-checked:text-purple-800">
-                                        <span class="h-2 w-2 rounded-full bg-purple-500"></span>
-                                        Select this candidate
-                                    </div>
-                                </div>
-                            </label>';
-                                }
-                                echo '
-                        </div>
-
-                        <!-- Submission Section -->
-                        <div class="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
-
-                            <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-
-                                <div class="flex items-start gap-3">
-                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 9v4m0 4h.01M10.3 3.9 2.7 17.1A2 2 0 0 0 4.4 20h15.2a2 2 0 0 0 1.7-2.9L13.7 3.9a2 2 0 0 0-3.4 0Z" />
-                                        </svg>
-                                    </div>
-
-                                    <div>
-                                        <h3 class="font-semibold text-slate-900">
-                                            Review before submitting
-                                        </h3>
-                                        <p class="mt-1 max-w-xl text-sm leading-5 text-slate-500">
-                                            Make sure you have selected the correct candidate.
-                                            Your selection will be submitted for verification.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-700 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-200 sm:w-auto">
-                                    Submit Vote
-
-                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 12h14m-7-7 7 7-7 7" />
-                                    </svg>
-                                </button>
-
-                            </div>
-                        </div>
-
-                     </form>';
+                            foreach ($candidates as $candidate) {
+                                $positionId = (int) $candidate['position_id'];
+                                $candidatesByPosition[$positionId][] = $candidate;
                             }
-                        }
                         ?>
 
+                            <form
+                                action="cast_vote.php?token=<?= urlencode($voter['token']) ?>"
+                                method="POST">
+                                <input
+                                    type="hidden"
+                                    name="election_id"
+                                    value="<?= (int) $election['id'] ?>">
+
+                                <?php foreach ($candidatesByPosition as $positionId => $positionCandidates): ?>
+                                    <section class="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                                        <div class="mb-4">
+                                            <h3 class="text-lg font-bold text-slate-900">
+                                                <?= htmlspecialchars($positionCandidates[0]['position'], ENT_QUOTES, 'UTF-8') ?>
+                                            </h3>
+                                            <p class="mt-1 text-sm text-slate-500">
+                                                Select one candidate for this position.
+                                            </p>
+                                        </div>
+
+                                        <div class="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
+                                            <?php foreach ($positionCandidates as $candidate): ?>
+                                                <?php
+                                                $nameParts = preg_split(
+                                                    '/\s+/',
+                                                    trim($candidate['candidate_name']),
+                                                    2
+                                                );
+
+                                                $firstName = $nameParts[0] ?? '';
+                                                $lastName = $nameParts[1] ?? '';
+                                                $initials = strtoupper(
+                                                    mb_substr($firstName, 0, 1) .
+                                                        mb_substr($lastName, 0, 1)
+                                                );
+                                                ?>
+
+                                                <label class="group relative block cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name="candidate[<?= (int) $positionId ?>]"
+                                                        value="<?= (int) $candidate['candidate_id'] ?>"
+                                                        required
+                                                        class="peer sr-only">
+
+                                                    <div class="h-full rounded-2xl border-2 border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-purple-300 hover:shadow-md peer-checked:border-purple-600 peer-checked:bg-purple-50/40 peer-focus-visible:ring-4 peer-focus-visible:ring-purple-200">
+
+                                                        <div class="flex items-start justify-between gap-3">
+                                                            <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-100 text-xl font-bold text-purple-700">
+                                                                <?= htmlspecialchars($initials, ENT_QUOTES, 'UTF-8') ?>
+                                                            </div>
+
+                                                            <div class="flex h-6 w-6 items-center justify-center rounded-full border-2 border-slate-300 text-white transition peer-checked:border-purple-700 peer-checked:bg-purple-700">
+                                                                <svg
+                                                                    class="h-4 w-4"
+                                                                    fill="none"
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24">
+                                                                    <path
+                                                                        stroke-linecap="round"
+                                                                        stroke-linejoin="round"
+                                                                        stroke-width="3"
+                                                                        d="m5 12 4 4L19 6" />
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+
+                                                        <p class="mt-5 text-xs font-semibold uppercase tracking-wider text-purple-700">
+                                                            Candidate
+                                                        </p>
+
+                                                        <h4 class="mt-1 text-lg font-bold text-slate-900">
+                                                            <?= htmlspecialchars($candidate['candidate_name'], ENT_QUOTES, 'UTF-8') ?>
+                                                        </h4>
+
+                                                        <div class="mt-4 space-y-3 border-t border-slate-100 pt-4">
+                                                            <div>
+                                                                <p class="text-xs text-slate-500">Political Party</p>
+                                                                <p class="mt-1 text-sm font-semibold text-slate-700">
+                                                                    <?= htmlspecialchars($candidate['party'], ENT_QUOTES, 'UTF-8') ?>
+                                                                </p>
+                                                            </div>
+
+                                                            <div>
+                                                                <p class="text-xs text-slate-500">Position</p>
+                                                                <p class="mt-1 text-sm font-semibold text-slate-700">
+                                                                    <?= htmlspecialchars($candidate['position'], ENT_QUOTES, 'UTF-8') ?>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="mt-5 flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm font-medium text-slate-600 peer-checked:bg-purple-100 peer-checked:text-purple-800">
+                                                            <span class="h-2 w-2 rounded-full bg-purple-500"></span>
+                                                            Select this candidate
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </section>
+                                <?php endforeach; ?>
+
+                                <!-- Submission Section -->
+                                <div class="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+                                    <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+
+                                        <div class="flex items-start gap-3">
+                                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+                                                <svg
+                                                    class="h-5 w-5"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path
+                                                        stroke-linecap="round"
+                                                        stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M12 9v4m0 4h.01M10.3 3.9 2.7 17.1A2 2 0 0 0 4.4 20h15.2a2 2 0 0 0 1.7-2.9L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+                                                </svg>
+                                            </div>
+
+                                            <div>
+                                                <h3 class="font-semibold text-slate-900">
+                                                    Review before submitting
+                                                </h3>
+                                                <p class="mt-1 max-w-xl text-sm leading-5 text-slate-500">
+                                                    Make sure you have selected one candidate for each position.
+                                                    Your selections will be submitted together.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            type="submit"
+                                            class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-700 px-6 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-200 sm:w-auto">
+                                            Submit Vote
+
+                                            <svg
+                                                class="h-5 w-5"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M5 12h14m-7-7 7 7-7 7" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+
+                        <?php } ?>
                     </section>
 
                     <!-- Security Notice -->

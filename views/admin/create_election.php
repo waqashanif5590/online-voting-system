@@ -10,13 +10,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $start_date = $_POST['start_date'];
     $end_date = $_POST['end_date'];
     $status = $_POST['status'];
+
+    $positions = $_POST['positions'];
+    $parties = $_POST['parties'];
+
     $stmt = $pdo->prepare("INSERT INTO elections (title, description, start_date, end_date, status) VALUES
     (?,?,?,?,?)");
     $isInserted = $stmt->execute([$title, $description, $start_date, $end_date, $status]);
     if ($isInserted) {
+        $election_id = $pdo->lastInsertId();
+        foreach ($parties as $party) {
+            $stmt = $pdo->prepare("INSERT INTO election_parties (election_id, party_id) VALUES
+           (?,?)");
+            $stmt->execute([$election_id, $party]);
+        }
+
+        foreach ($positions as $position) {
+            $stmt = $pdo->prepare("INSERT INTO election_positions (election_id, position_id) VALUES
+           (?,?)");
+            $stmt->execute([$election_id, $position]);
+        }
         echo '<script>alert("New election was added successfully")</script>';
     }
 }
+
+$stmt = $pdo->prepare("SELECT * FROM parties");
+$stmt->execute();
+$parties = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$stmt = $pdo->prepare("SELECT * FROM positions");
+$stmt->execute();
+$positions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -123,32 +147,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <div
                                     id="partyDropdown"
                                     class="absolute z-20 mt-2 hidden max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
-                                    <label class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-purple-50">
-                                        <input
-                                            type="checkbox"
-                                            name="parties[]"
-                                            value="1"
-                                            class="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500">
-                                        <span class="text-sm text-slate-700">Student Unity Party</span>
-                                    </label>
 
-                                    <label class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-purple-50">
-                                        <input
-                                            type="checkbox"
-                                            name="parties[]"
-                                            value="2"
-                                            class="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500">
-                                        <span class="text-sm text-slate-700">Student Progressive Party</span>
-                                    </label>
-
-                                    <label class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-purple-50">
-                                        <input
-                                            type="checkbox"
-                                            name="parties[]"
-                                            value="3"
-                                            class="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500">
-                                        <span class="text-sm text-slate-700">Student Social Activists</span>
-                                    </label>
+                                    <?php foreach ($parties as $key => $party): ?>
+                                        <label class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-purple-50">
+                                            <input
+                                                type="checkbox"
+                                                name="parties[]"
+                                                value="<?= $party['id'] ?>"
+                                                class="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500">
+                                            <span class="text-sm text-slate-700"><?= $party['name'] ?> </span>
+                                        </label>
+                                    <?php endforeach; ?>
                                 </div>
 
                                 <p class="mt-2 text-xs text-slate-500">
@@ -189,32 +198,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <div
                                     id="positionDropdown"
                                     class="absolute z-20 mt-2 hidden max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
-                                    <label class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-purple-50">
-                                        <input
-                                            type="checkbox"
-                                            name="positions[]"
-                                            value="1"
-                                            class="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500">
-                                        <span class="text-sm text-slate-700">President</span>
-                                    </label>
-
-                                    <label class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-purple-50">
-                                        <input
-                                            type="checkbox"
-                                            name="positions[]"
-                                            value="2"
-                                            class="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500">
-                                        <span class="text-sm text-slate-700">Vice President</span>
-                                    </label>
-
-                                    <label class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-purple-50">
-                                        <input
-                                            type="checkbox"
-                                            name="positions[]"
-                                            value="3"
-                                            class="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500">
-                                        <span class="text-sm text-slate-700">Secratory</span>
-                                    </label>
+                                    <?php foreach ($positions as $key => $position): ?>
+                                        <label class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-purple-50">
+                                            <input
+                                                type="checkbox"
+                                                name="positions[]"
+                                                value="<?= $position['id'] ?>"
+                                                class="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500">
+                                            <span class="text-sm text-slate-700"><?= $position['title'] ?></span>
+                                        </label>
+                                    <?php endforeach; ?>
                                 </div>
 
                                 <p class="mt-2 text-xs text-slate-500">

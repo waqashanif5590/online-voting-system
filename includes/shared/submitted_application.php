@@ -1,7 +1,7 @@
 <?php
 $detailsStmt = $pdo->prepare("
     SELECT
-        candidates.*,
+        applications.*,
         users.name AS candidate_name,
         users.email AS candidate_email,
         users.identity_number,
@@ -12,12 +12,12 @@ $detailsStmt = $pdo->prepare("
         elections.end_date AS election_end_date,
         positions.title AS position_name,
         parties.name AS party_name
-    FROM candidates
-    INNER JOIN users ON candidates.user_id = users.id
-    LEFT JOIN elections ON candidates.election_id = elections.id
-    LEFT JOIN positions ON candidates.position_id = positions.id
-    LEFT JOIN parties ON candidates.party_id = parties.id
-    WHERE candidates.id = ?
+    FROM applications
+    INNER JOIN users ON applications.user_id = users.id
+    LEFT JOIN elections ON applications.election_id = elections.id
+    LEFT JOIN positions ON applications.position_id = positions.id
+    LEFT JOIN parties ON applications.party_id = parties.id
+    WHERE applications.id = ?
 ");
 $detailsStmt->execute([$applicationCandidateId]);
 $application = $detailsStmt->fetch(PDO::FETCH_ASSOC);

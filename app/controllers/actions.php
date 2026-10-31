@@ -4,10 +4,10 @@ session_start();
 require_once APP_ROOT . '/app/config/database.php';
 if (isset($_GET['approve'], $_GET['candidate'])) {
     if ($_GET['approve'] === 'true') {
-        $stmt = $pdo->prepare("UPDATE candidates SET status=? WHERE id=?");
+        $stmt = $pdo->prepare("UPDATE applications SET status=? WHERE id=?");
         $stmt->execute(['approved', $_GET['candidate']]);
     } else if ($_GET['approve'] === 'false') {
-        $stmt = $pdo->prepare("UPDATE candidates SET status=? WHERE id=?");
+        $stmt = $pdo->prepare("UPDATE applications SET status=? WHERE id=?");
         $stmt->execute(['rejected', $_GET['candidate']]);
     }
     header('Location: ' . app_url('views/admin/candidates.php'));

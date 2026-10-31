@@ -28,7 +28,7 @@ INSERT INTO `users` (`name`, `email`, `identity_type`, `identity_number`, `dob`,
 ('Noor Ahmed', 'noor.ahmed@example.com', 'cnic', '3520212345682', '1989-11-04', 'female', 'voter', '$2y$12$qWuGMC9GDpKg9r9ukXU9ZuFikXjTfZmkJzXtLJQgmMrhYBkMIy82W'),
 ('Taylor Brooks', 'taylor.brooks@example.com', 'passport', 'VOT0000001', '2000-03-27', 'other', 'voter', '$2y$12$qWuGMC9GDpKg9r9ukXU9ZuFikXjTfZmkJzXtLJQgmMrhYBkMIy82W');
 
-INSERT INTO `candidates` (`user_id`, `address`, `city`, `state`, `country`, `postal_code`, `election_id`, `position_id`, `constituency_area`, `party_id`, `qualifications`, `experience`, `manifesto`, `status`)
+INSERT INTO `applications` (`user_id`, `address`, `city`, `state`, `country`, `postal_code`, `election_id`, `position_id`, `constituency_area`, `party_id`, `qualifications`, `experience`, `manifesto`, `status`)
 SELECT users.id, '14 Market Street', 'Springfield', 'Illinois', 'United States', '62701', elections.id, positions.id, 'Springfield Central', parties.id,
        'Master of Public Administration', 'Served two terms on the city council.', 'Improve public transport, expand parks, and publish transparent city budgets.', 'approved'
 FROM users
@@ -37,7 +37,7 @@ JOIN positions ON positions.title = 'Mayor'
 JOIN parties ON parties.name = 'Democratic Party'
 WHERE users.email = 'ava.patel@example.com';
 
-INSERT INTO `candidates` (`user_id`, `address`, `city`, `state`, `country`, `postal_code`, `election_id`, `position_id`, `constituency_area`, `party_id`, `qualifications`, `experience`, `manifesto`, `status`)
+INSERT INTO `applications` (`user_id`, `address`, `city`, `state`, `country`, `postal_code`, `election_id`, `position_id`, `constituency_area`, `party_id`, `qualifications`, `experience`, `manifesto`, `status`)
 SELECT users.id, '82 Oak Avenue', 'Springfield', 'Illinois', 'United States', '62702', elections.id, positions.id, 'Springfield Central', parties.id,
        'Bachelor of Economics', 'Led neighborhood business and community development programs.', 'Support local businesses, improve road maintenance, and strengthen public safety.', 'approved'
 FROM users
@@ -46,7 +46,7 @@ JOIN positions ON positions.title = 'Mayor'
 JOIN parties ON parties.name = 'Republican Party'
 WHERE users.email = 'jordan.lee@example.com';
 
-INSERT INTO `candidates` (`user_id`, `address`, `city`, `state`, `country`, `postal_code`, `election_id`, `position_id`, `constituency_area`, `party_id`, `qualifications`, `experience`, `manifesto`, `status`)
+INSERT INTO `applications` (`user_id`, `address`, `city`, `state`, `country`, `postal_code`, `election_id`, `position_id`, `constituency_area`, `party_id`, `qualifications`, `experience`, `manifesto`, `status`)
 SELECT users.id, '5 Capitol Plaza', 'Washington', 'District of Columbia', 'United States', '20001', elections.id, positions.id, 'National District', parties.id,
        'Doctor of Political Science', 'Worked in public policy and served on a non-profit board.', 'Protect civil liberties, invest in clean energy, and make public services accessible.', 'pending'
 FROM users

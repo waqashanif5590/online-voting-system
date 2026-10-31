@@ -8,6 +8,25 @@ $electionId = filter_input(INPUT_GET, 'election', FILTER_VALIDATE_INT);
 $stmt = $pdo->prepare("SELECT * FROM elections WHERE id=?");
 $stmt->execute([$electionId]);
 $election = $stmt->fetch(PDO::FETCH_ASSOC);
+if (!$election) {
+    http_response_code(404);
+}
+
+$stmt = $pdo->prepare("SELECT * FROM election_parties WHERE election_id=?");
+$stmt->execute([$electionId]);
+$selectedParties = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$stmt = $pdo->prepare("SELECT * FROM election_positions WHERE election_id=?");
+$stmt->execute([$electionId]);
+$selectedPositions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$stmt = $pdo->prepare("SELECT * FROM parties");
+$stmt->execute();
+$parties = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$stmt = $pdo->prepare("SELECT * FROM positions");
+$stmt->execute();
+$positions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $title = $_POST['title'];
@@ -16,9 +35,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $end_date = $_POST['end_date'];
     $status = $_POST['status'];
     $electionId = $_POST['election_id'];
+
+    $positions = $_POST['positions'];
+    $parties = $_POST['parties'];
+
     $stmt = $pdo->prepare("UPDATE elections SET title=?, description=?, start_date=?, end_date=?, status=? WHERE id=?");
     $update = $stmt->execute([$title, $description, $start_date, $end_date, $status, $electionId]);
     if ($update) {
+        $stmt = $pdo->prepare("DELETE FROM election_parties WHERE election_id=?");
+        $stmt->execute([$electionId]);
+        $stmt = $pdo->prepare("DELETE FROM election_positions WHERE election_id=?");
+        $stmt->execute([$electionId]);
+        foreach ($parties as $party) {
+            $stmt = $pdo->prepare("INSERT INTO election_parties (party_id, election_id) VALUES (?,?)");
+            $stmt->execute([$party, $electionId]);
+        }
+        foreach ($positions as $position) {
+            $stmt = $pdo->prepare("INSERT INTO election_positions (position_id, election_id) VALUES (?,?)");
+            $stmt->execute([$position, $electionId]);
+        }
         header('Location: ' . app_url('views/common/elections.php'));
     }
 }
@@ -82,7 +117,111 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <textarea id="description" name="description" rows="5" required placeholder="Describe the purpose and details of this election" class="block w-full resize-y rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-purple-500 focus:ring-4 focus:ring-purple-100"><?= $election['description'] ?></textarea>
                             <p class="mt-2 text-xs text-slate-500">Provide a clear summary so voters understand the purpose of this election.</p>
                         </div>
+                        <div class="grid gap-5 sm:grid-cols-2">
+                            <div class="relative">
+                                <label class="mb-2 block text-sm font-semibold text-slate-700">
+                                    Select parties to add
+                                    <span class="text-rose-600">*</span>
+                                </label>
 
+                                <!-- Dropdown button -->
+                                <button
+                                    type="button"
+                                    id="partyDropdownButton"
+                                    class="flex w-full items-center justify-between rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-purple-500 focus:ring-4 focus:ring-purple-100"
+                                    aria-expanded="false"
+                                    aria-controls="partyDropdown">
+                                    <span id="selectedPartyText">Select parties</span>
+
+                                    <svg
+                                        class="h-4 w-4 transition-transform"
+                                        id="partyDropdownArrow"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="m19 9-7 7-7-7" />
+                                    </svg>
+                                </button>
+
+                                <!-- Dropdown options -->
+                                <div
+                                    id="partyDropdown"
+                                    class="absolute z-20 mt-2 hidden max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+
+                                    <?php foreach ($parties as $key => $party): ?>
+                                        <label class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-purple-50">
+                                            <input
+                                                type="checkbox"
+                                                name="parties[]"
+                                                value="<?= $party['id'] ?>"
+                                                <?= in_array($party['id'], $selectedParties) ? 'checked' : '' ?>
+                                                class="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500">
+                                            <span class="text-sm text-slate-700"><?= $party['name'] ?> </span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+
+                                <p class="mt-2 text-xs text-slate-500">
+                                    Select one or more parties for this election.
+                                </p>
+                            </div>
+
+                            <div class="relative">
+                                <label class="mb-2 block text-sm font-semibold text-slate-700">
+                                    Select positions to add
+                                    <span class="text-rose-600">*</span>
+                                </label>
+
+                                <!-- Dropdown button -->
+                                <button
+                                    type="button"
+                                    id="positionDropdownButton"
+                                    class="flex w-full items-center justify-between rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-purple-500 focus:ring-4 focus:ring-purple-100"
+                                    aria-expanded="false"
+                                    aria-controls="positionDropdown">
+                                    <span id="selectedPositionText">Select positions</span>
+
+                                    <svg
+                                        class="h-4 w-4 transition-transform"
+                                        id="positionDropdownArrow"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="m19 9-7 7-7-7" />
+                                    </svg>
+                                </button>
+
+                                <!-- Dropdown options -->
+                                <div
+                                    id="positionDropdown"
+                                    class="absolute z-20 mt-2 hidden max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+                                    <?php foreach ($positions as $key => $position): ?>
+                                        <label class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 hover:bg-purple-50">
+                                            <input
+                                                type="checkbox"
+                                                name="positions[]"
+                                                value="<?= $position['id'] ?>"
+                                                <?= in_array($position['id'], $selectedPositions) ? 'checked' : '' ?>
+                                                class="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500">
+                                            <span class="text-sm text-slate-700"><?= $position['title'] ?></span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+
+                                <p class="mt-2 text-xs text-slate-500">
+                                    Select one or more positions for this election.
+                                </p>
+                            </div>
+
+                        </div>
                         <div class="grid gap-5 sm:grid-cols-2">
                             <div>
                                 <label for="start_date" class="mb-2 block text-sm font-semibold text-slate-700">Start date and time <span class="text-rose-600">*</span></label>
@@ -158,6 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <footer class="mt-8 border-t border-slate-200 pt-5 text-center text-xs text-slate-500">© 2026 LiveVoting. Online Voting System.</footer>
         </main>
     </div>
+    <script src="<?= htmlspecialchars(app_url('public/js/elections.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
 </body>
 
 </html>

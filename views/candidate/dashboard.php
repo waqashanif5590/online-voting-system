@@ -8,15 +8,15 @@ $candidateName = $_SESSION['user_name'] ?? 'Candidate Name';
 
 $stmt = $pdo->prepare("
     SELECT
-        candidates.*,
+        applications.*,
         elections.title AS election_name,
         positions.title AS position_name
-    FROM candidates
+    FROM applications
     INNER JOIN elections
-        ON candidates.election_id = elections.id
+        ON applications.election_id = elections.id
     INNER JOIN positions
-        ON candidates.position_id = positions.id
-        WHERE candidates.user_id = ?
+        ON applications.position_id = positions.id
+        WHERE applications.user_id = ?
 ");
 
 $stmt->execute([$_SESSION['user_id']]);

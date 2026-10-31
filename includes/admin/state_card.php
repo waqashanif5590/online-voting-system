@@ -46,7 +46,7 @@
                    <p class="text-sm font-semibold text-slate-500">Pending Applications</p>
                    <p class="mt-3 text-3xl font-extrabold tracking-tight text-slate-900">
                        <?php
-                        $pending_applications = $pdo->query("SELECT COUNT(*) FROM candidates WHERE status='pending'")->fetchColumn();
+                        $pending_applications = $pdo->query("SELECT COUNT(*) FROM applications WHERE status='pending'")->fetchColumn();
                         echo $pending_applications; ?>
                    </p>
                </div>

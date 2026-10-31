@@ -42,7 +42,7 @@ CREATE TABLE users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE candidates (
+CREATE TABLE applications (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     address VARCHAR(255) NOT NULL,
@@ -84,13 +84,13 @@ CREATE TABLE voters (
 CREATE TABLE votes (
    id INT AUTO_INCREMENT PRIMARY KEY,
    election_id INT NOT NULL,
-   candidate_id INT NOT NULL,
+   application_id INT NOT NULL,
    position_id INT NOT NULL,
    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
    FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
-   FOREIGN KEY (candidate_id) REFERENCES candidates(id) ON DELETE CASCADE,
+   FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE,
    FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE CASCADE,
-   UNIQUE (election_id, candidate_id)
+   UNIQUE (election_id, application_id)
 );
 
 CREATE TABLE voter_participation (
@@ -121,6 +121,6 @@ CREATE TABLE election_parties (
    party_id INT NOT NULL,
    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
    FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
-   FOREIGN KEY (party_id) REFERENCES party(id) ON DELETE CASCADE,
+   FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE,
    UNIQUE (election_id, party_id)
 )

@@ -5,7 +5,7 @@ require_once APP_ROOT . '/app/config/database.php';
 require_once APP_ROOT . '/views/auth/check_auth.php';
 
 $message = '';
-$stmt = $pdo->prepare("SELECT * FROM `candidates` WHERE user_id=?");
+$stmt = $pdo->prepare("SELECT * FROM `applications` WHERE user_id=?");
 $stmt->execute([$_SESSION['user_id']]);
 $candidate = $stmt->fetch(PDO::FETCH_ASSOC);
 if ($candidate) {
@@ -22,12 +22,18 @@ if ($candidate) {
     $elections = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Positions for candidate registration
-    $stmt = $pdo->prepare("SELECT * FROM `positions`");
+    $stmt = $pdo->prepare("SELECT positions.title AS title,
+    election_positions.position_id AS id
+    FROM election_positions
+    INNER JOIN positions ON election_positions.position_id=positions.id");
     $stmt->execute();
     $positions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Parties for candidate registration
-    $stmt = $pdo->prepare("SELECT * FROM `parties`");
+    $stmt = $pdo->prepare("SELECT parties.name AS name,
+    election_parties.party_id AS id
+    FROM election_parties
+    INNER JOIN parties ON election_parties.party_id=parties.id");
     $stmt->execute();
     $parties = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -46,7 +52,7 @@ if ($candidate) {
         $experience = $_POST['experience'];
         $manifesto = $_POST['manifesto'];
 
-        $stmt = $pdo->prepare("INSERT INTO candidates (user_id, address, city, state, country, postal_code, election_id, position_id, constituency_area, party_id, qualifications, experience, manifesto)
+        $stmt = $pdo->prepare("INSERT INTO applications (user_id, address, city, state, country, postal_code, election_id, position_id, constituency_area, party_id, qualifications, experience, manifesto)
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
         $stmt->execute([
             $user_id,
