@@ -89,8 +89,7 @@ CREATE TABLE votes (
    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
    FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
    FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE,
-   FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE CASCADE,
-   UNIQUE (election_id, application_id)
+   FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE CASCADE
 );
 
 CREATE TABLE voter_participation (
@@ -123,4 +122,19 @@ CREATE TABLE election_parties (
    FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
    FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE,
    UNIQUE (election_id, party_id)
+)
+
+CREATE TABLE results (
+   id INT AUTO_INCREMENT PRIMARY KEY,
+   application_id INT NOT NULL,
+   election_id INT NOT NULL,
+   party_id INT NOT NULL,
+   position_id INT NOT NULL,
+   vote_count BIGINT NOT NULL DEFAULT 0,
+   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE,
+   FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
+   FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE,
+   FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE CASCADE,
+   UNIQUE (application_id, election_id, party_id, position_id)
 )

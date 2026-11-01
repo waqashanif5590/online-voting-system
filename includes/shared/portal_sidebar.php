@@ -14,7 +14,7 @@ $portalNavigation = [
         ['label' => 'Elections', 'href' => 'views/common/elections.php', 'pages' => ['elections.php']],
         ['label' => 'Voters', 'href' => 'views/admin/voters.php', 'pages' => ['voters.php']],
         ['label' => 'Candidates', 'href' => 'views/admin/candidates.php', 'pages' => ['candidates.php']],
-        ['label' => 'Applications', 'href' => 'views/admin/candidates.php', 'pages' => ['candidates.php']],
+        // ['label' => 'Applications', 'href' => 'views/admin/candidates.php', 'pages' => ['candidates.php']],
         ['label' => 'Positions', 'href' => 'views/admin/positions.php', 'pages' => ['positions.php']],
         ['label' => 'Political Parties', 'href' => 'views/admin/parties.php', 'pages' => ['parties.php']],
         ['label' => 'Election Results', 'href' => 'views/admin/results.php', 'pages' => ['results.php']],

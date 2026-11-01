@@ -137,7 +137,7 @@ $pageDescription = 'Explore election schedules and check the current status of e
                                                     $today <= $endDate &&
                                                     $status === 'upcoming'
                                                 ): ?>
-                                                    <a href="<?= htmlspecialchars(app_url('app/controllers/actions.php?golive=' . $election['id'] . '&csrf_token=' . urlencode(getCsrfToken())), ENT_QUOTES, 'UTF-8') ?>"
+                                                    <a href="<?= htmlspecialchars(app_url('app/controllers/election_actions.php?golive=' . $election['id'] . '&csrf_token=' . urlencode(getCsrfToken())), ENT_QUOTES, 'UTF-8') ?>"
                                                         class="inline-flex items-center justify-center rounded-lg border border-purple-200 bg-purple-50 px-2.5 py-1.5 text-[11px] font-bold text-purple-800 transition hover:bg-purple-100 focus:outline-none focus:ring-4 focus:ring-purple-100">
                                                         Go Live
                                                     </a>
@@ -205,8 +205,8 @@ $pageDescription = 'Explore election schedules and check the current status of e
 
                                             <?php if ($portalRole === 'admin'): ?>
                                                 <?php if ($status === 'ongoing'): ?>
-                                                    <a href="<?= htmlspecialchars(app_url('app/controllers/actions.php?election=' . $election['id'] . '&csrf_token=' . urlencode(getCsrfToken())), ENT_QUOTES, 'UTF-8') ?>" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-sm font-bold text-purple-800 mb-2 transition hover:bg-purple-100 focus:outline-none focus:ring-4 focus:ring-purple-100">
-                                                        Stop & Mark Completed
+                                                    <a href="<?= htmlspecialchars(app_url('app/controllers/election_actions.php?election=' . $election['id'] . '&csrf_token=' . urlencode(getCsrfToken())), ENT_QUOTES, 'UTF-8') ?>" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-sm font-bold text-purple-800 mb-2 transition hover:bg-purple-100 focus:outline-none focus:ring-4 focus:ring-purple-100">
+                                                        Stop & Generate Results
                                                         <span aria-hidden="true">&rarr;</span>
                                                     </a>
                                                 <?php elseif ($status === 'upcoming'): ?>

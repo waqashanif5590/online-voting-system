@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $submittedPositions = array_map('intval', array_keys($selections));
         sort($requiredPositions);
         sort($submittedPositions);
-       
+
         if ($requiredPositions !== $submittedPositions) {
             throw new RuntimeException('Please select one candidate for every position.');
         }
@@ -122,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Confirm the candidate is approved and belongs to this
             // election and the submitted position.
             $stmt = $pdo->prepare("
-                SELECT id
+                SELECT id, party_id
                 FROM applications
                 WHERE id = ?
                   AND election_id = ?
@@ -135,20 +135,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $electionId,
                 $positionId
             ]);
+            $application = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!$application) {
                 throw new RuntimeException('A selected candidate is not valid for this election.');
             }
 
             // Store the candidate choice without storing the voter's ID.
             $stmt = $pdo->prepare("
-                INSERT INTO votes (election_id, application_id, position_id)
-                VALUES (?, ?, ?)
+                INSERT INTO votes (election_id, application_id, position_id, party_id)
+                VALUES (?, ?, ?, ?)
             ");
             $stmt->execute([
                 $electionId,
                 $applicationId,
-                $positionId
+                $positionId,
+                $application['party_id']
             ]);
 
             // Record participation separately from the candidate choice.
