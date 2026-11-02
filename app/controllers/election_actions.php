@@ -40,7 +40,7 @@ if (isset($_GET['election'])) {
         ]);
     }
 
-    $stmt = $pdo->prepare("UPDATE elections SET status=? WHERE id=?");
+    $stmt = $pdo->prepare("UPDATE elections SET status=?, result_declared_at=NOW() WHERE id=?");
     $stmt->execute(['completed', $_GET['election']]);
     header('Location: ' . app_url('views/common/elections.php'));
     exit();

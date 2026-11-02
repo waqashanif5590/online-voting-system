@@ -180,8 +180,8 @@ $pageDescription = 'Explore election schedules and check the current status of e
                                                         <span aria-hidden="true">&rarr;</span>
                                                     </div>';
                                                     } else echo '
-                                                    <a href="'.
-                                                    htmlspecialchars(app_url('views/candidate/registration.php'), ENT_QUOTES, 'UTF-8').'" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-700 px-4 py-3 text-sm font-bold text-white transition hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-200">
+                                                    <a href="' .
+                                                        htmlspecialchars(app_url('views/candidate/registration.php'), ENT_QUOTES, 'UTF-8') . '" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-700 px-4 py-3 text-sm font-bold text-white transition hover:bg-purple-800 focus:outline-none focus:ring-4 focus:ring-purple-200">
                                                         Apply for candidacy
                                                         <span aria-hidden="true">&rarr;</span>
                                                     </a>'
@@ -193,7 +193,7 @@ $pageDescription = 'Explore election schedules and check the current status of e
                                                     </span>
                                                 <?php endif; ?>
                                             <?php elseif ($status === 'completed'): ?>
-                                                <a href="<?= htmlspecialchars(app_url('views/common/results.php'), ENT_QUOTES, 'UTF-8') ?>" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-sm font-bold text-purple-800 mb-2 transition hover:bg-purple-100 focus:outline-none focus:ring-4 focus:ring-purple-100">
+                                                <a href="<?= htmlspecialchars(app_url('views/common/results.php?election=' . $election['id'] . '&csrf_token=' . urlencode(getCsrfToken())), ENT_QUOTES, 'UTF-8') ?>" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-purple-200 bg-purple-50 px-4 py-3 text-sm font-bold text-purple-800 mb-2 transition hover:bg-purple-100 focus:outline-none focus:ring-4 focus:ring-purple-100">
                                                     View results
                                                     <span aria-hidden="true">&rarr;</span>
                                                 </a>
