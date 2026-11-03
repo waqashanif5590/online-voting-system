@@ -150,7 +150,7 @@ $pageDescription = 'Explore election schedules and check the current status of e
                                                 <?= $escape($election['title'] ?? 'Untitled election') ?>
                                             </h3>
                                             <?php if ($portalRole === 'admin'): ?>
-                                                <a href="<?= htmlspecialchars(app_url('app/controllers/actions.php?delete=' . $election['id'] . '&csrf_token=' . urlencode(getCsrfToken())), ENT_QUOTES, 'UTF-8') ?>">Delete</a>
+                                                <a href="<?= htmlspecialchars(app_url('app/controllers/election_actions.php?delete=' . $election['id'] . '&csrf_token=' . urlencode(getCsrfToken())), ENT_QUOTES, 'UTF-8') ?>">Delete</a>
                                             <?php endif; ?>
                                         </div>
                                         <p class="mt-2 min-h-12 whitespace-pre-line text-sm leading-6 text-slate-600">

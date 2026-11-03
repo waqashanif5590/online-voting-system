@@ -55,23 +55,17 @@ foreach ($candidates as $candidate) {
     $resultsByPosition[$positionId]['candidates'][] = $candidate;
     $resultsByPosition[$positionId]['total_votes'] += $candidate['vote_count'];
 }
-// Total voters
-$stmt = $pdo->prepare("SELECT COUNT(*) AS total_voters FROM voters WHERE election_id = :election_id");
+// Election totals are stored in election_summary after the election is completed.
+$stmt = $pdo->prepare("SELECT * FROM election_summary WHERE election_id=:election_id LIMIT 1");
 $stmt->execute(['election_id' => $electionId]);
-$totalVoters = $stmt->fetch(PDO::FETCH_ASSOC)['total_voters'] ?? 0;
+$summary = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Total votes cast
-$stmt = $pdo->prepare("SELECT SUM(vote_count) AS total_votes_cast FROM results WHERE election_id = :election_id");
-$stmt->execute(['election_id' => $electionId]);
-$totalVotesCast = $stmt->fetch(PDO::FETCH_ASSOC)['total_votes_cast'] ?? 0;
-
-// Voters turnout percentage
-$voterTurnoutPercentage = $totalVoters > 0 ? ($totalVotesCast / $totalVoters) * 100 : 0;
-
-// Approved Candidates
-$stmt = $pdo->prepare("SELECT COUNT(*) AS total_candidates FROM applications WHERE election_id = :election_id AND status = 'approved'");
-$stmt->execute(['election_id' => $electionId]);
-$totalCandidates = $stmt->fetch(PDO::FETCH_ASSOC)['total_candidates'] ?? 0;
+$totalVotesCast = $summary ? (int) $summary['total_votes'] : 0;
+$totalVoters = $summary ? (int) $summary['total_voters'] : 0;
+$totalCandidates = $summary ? (int) $summary['total_candidates'] : 0;
+$rejectedVotes = $summary ? (int) $summary['rejected_votes'] : 0;
+$totalParticipatedVoters = max(0, $totalVoters - $rejectedVotes);
+$voterTurnoutPercentage = $totalVoters > 0 ? ($totalParticipatedVoters / $totalVoters) * 100 : 0;
 
 // available positions
 $stmt = $pdo->prepare("SELECT COUNT(*) AS total_positions FROM election_positions WHERE election_id = :election_id");
@@ -179,7 +173,7 @@ $totalPositions = $stmt->fetch(PDO::FETCH_ASSOC)['total_positions'] ?? 0;
                             </div>
                             <p class="mt-4 text-3xl font-bold tracking-tight text-slate-900"><?= number_format($voterTurnoutPercentage, 1) ?><span class="text-xl">%</span></p>
                             <div class="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
-                                <div class="h-full w-4/5 rounded-full bg-green-500"></div>
+                                <div class="h-full rounded-full bg-green-500" style="width: <?= max(0, min(100, $voterTurnoutPercentage)) ?>%;"></div>
                             </div>
                         </article>
                         <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -198,7 +192,7 @@ $totalPositions = $stmt->fetch(PDO::FETCH_ASSOC)['total_positions'] ?? 0;
                                     </svg></span>
                             </div>
                             <p class="mt-4 text-3xl font-bold tracking-tight text-slate-900"><?= number_format($totalVotesCast) ?></p>
-                            <p class="mt-2 text-xs text-slate-500">18 invalid or rejected ballots</p>
+                            <p class="mt-2 text-xs text-slate-500"><?= number_format($rejectedVotes) ?> rejected or unanswered ballots</p>
                         </article>
                     </section>
 

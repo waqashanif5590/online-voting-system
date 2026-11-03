@@ -138,3 +138,14 @@ CREATE TABLE results (
    FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE CASCADE,
    UNIQUE (application_id, election_id, party_id, position_id)
 )
+
+CREATE TABLE election_summary (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    election_id INT NOT NULL,
+    total_votes BIGINT NOT NULL DEFAULT 0,
+    total_candidates BIGINT NOT NULL DEFAULT 0,
+    total_voters BIGINT NOT NULL DEFAULT 0,
+    rejected_votes BIGINT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE
+)
