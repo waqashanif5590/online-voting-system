@@ -27,7 +27,7 @@ $stmt = $pdo->prepare("SELECT applications.id AS candidate_id,
         elections.id AS election
         FROM applications
         INNER JOIN users ON applications.user_id=users.id
-        INNER JOIN parties ON applications.party_id=parties.id
+        LEFT JOIN parties ON applications.party_id=parties.id
         INNER JOIN positions ON applications.position_id=positions.id
         INNER JOIN elections ON applications.election_id=elections.id
         WHERE applications.election_id=? AND applications.status=?
@@ -425,7 +425,7 @@ $pageDescription = 'Review the candidates and securely submit your choice for th
                                                             <div>
                                                                 <p class="text-xs text-slate-500">Political Party</p>
                                                                 <p class="mt-1 text-sm font-semibold text-slate-700">
-                                                                    <?= htmlspecialchars($candidate['party'], ENT_QUOTES, 'UTF-8') ?>
+                                                                    <?= htmlspecialchars($candidate['party'] ?? 'Independent / no party', ENT_QUOTES, 'UTF-8') ?>
                                                                 </p>
                                                             </div>
 

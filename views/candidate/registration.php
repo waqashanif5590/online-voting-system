@@ -5,91 +5,130 @@ require_once APP_ROOT . '/app/config/database.php';
 require_once APP_ROOT . '/app/helpers/security.php';
 requireRole('candidate');
 
+$userId = (int) $_SESSION['user_id'];
 $message = '';
-$stmt = $pdo->prepare("SELECT * FROM `applications` WHERE user_id=?");
-$stmt->execute([$_SESSION['user_id']]);
-$candidate = $stmt->fetch(PDO::FETCH_ASSOC);
-if ($candidate) {
-    $message = "Already Registered. Please contact administrator for you queries.";
-} else {
 
-    $stmt = $pdo->prepare("SELECT * FROM `users` WHERE id=?");
-    $stmt->execute([$_SESSION['user_id']]);
-    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+$stmt = $pdo->prepare("
+    SELECT applications.*, elections.status AS election_status
+    FROM applications
+    INNER JOIN elections ON elections.id = applications.election_id
+    WHERE applications.user_id = ?
+    ORDER BY applications.created_at DESC
+");
+$stmt->execute([$userId]);
+$applications = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Elections for candidate registration
-    $stmt = $pdo->prepare("SELECT * FROM `elections` WHERE status=?");
-    $stmt->execute(['upcoming']);
-    $elections = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$stmt = $pdo->prepare("
+    SELECT 1
+    FROM applications
+    INNER JOIN elections ON elections.id = applications.election_id
+    WHERE applications.user_id = ?
+      AND applications.status IN ('pending', 'approved')
+      AND elections.status <> 'completed'
+    LIMIT 1
+");
+$stmt->execute([$userId]);
+$hasActiveApplication = (bool) $stmt->fetchColumn();
 
-    $positions = [];
-    $parties = [];
+$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+$stmt->execute([$userId]);
+$data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        checkCsrfToken();
-        $election_id = (int) ($_POST['election_id'] ?? 0);
+$electionsStmt = $pdo->prepare("
+    SELECT elections.*
+    FROM elections
+    WHERE elections.status = 'upcoming'
+      AND NOT EXISTS (
+          SELECT 1 FROM applications
+          WHERE applications.election_id = elections.id
+            AND applications.user_id = ?
+      )
+    ORDER BY elections.start_date ASC
+");
+$electionsStmt->execute([$userId]);
+$elections = $electionsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+$positions = [];
+$parties = [];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    checkCsrfToken();
+
+    if ($hasActiveApplication) {
+        $message = 'You already have an active application. You can apply again after it is rejected or its election is completed.';
+    } else {
+        $electionId = (int) ($_POST['election_id'] ?? 0);
+        $positionId = (int) ($_POST['position'] ?? 0);
+        $partyId = (int) ($_POST['party'] ?? 0);
+
+        $stmt = $pdo->prepare("SELECT id FROM elections WHERE id = ? AND status = 'upcoming'");
+        $stmt->execute([$electionId]);
+        $validElection = $stmt->fetchColumn();
 
         $stmt = $pdo->prepare("
-        SELECT p.id, p.title
-        FROM election_positions ep
-        INNER JOIN positions p ON ep.position_id = p.id
-        WHERE ep.election_id = ?
-    ");
-        $stmt->execute([$election_id]);
-        $positions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            SELECT 1 FROM election_positions
+            WHERE election_id = ? AND position_id = ?
+        ");
+        $stmt->execute([$electionId, $positionId]);
+        $validPosition = (bool) $stmt->fetchColumn();
 
         $stmt = $pdo->prepare("
-        SELECT p.id, p.name
-        FROM election_parties ep
-        INNER JOIN parties p ON ep.party_id = p.id
-        WHERE ep.election_id = ?
-    ");
-        $stmt->execute([$election_id]);
-        $parties = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            SELECT 1 FROM applications
+            WHERE user_id = ? AND election_id = ?
+        ");
+        $stmt->execute([$userId, $electionId]);
+        $alreadyApplied = (bool) $stmt->fetchColumn();
 
-        $user_id = $_SESSION['user_id'];
-        $address = $_POST['address'];
-        $city = $_POST['city'];
-        $state = $_POST['province'];
-        $country = $_POST['country'];
-        $postal_code = $_POST['postal_code'];
-        $election_id = $_POST['election_id'];
-        $position = $_POST['position'];
-        $party = $_POST['party'];
-        $constituency_area = $_POST['constituency'];
-        $qualification = $_POST['qualification'];
-        $experience = $_POST['experience'];
-        $manifesto = $_POST['manifesto'];
-
-        $stmt = $pdo->prepare("INSERT INTO applications (user_id, address, city, state, country, postal_code, election_id, position_id, constituency_area, party_id, qualifications, experience, manifesto)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)");
-        $stmt->execute([
-            $user_id,
-            $address,
-            $city,
-            $state,
-            $country,
-            $postal_code,
-            $election_id,
-            $position,
-            $constituency_area,
-            $party,
-            $qualification,
-            $experience,
-            $manifesto
-        ]);
-        $message = "Already Registered. Please contact administrator for you queries.";
-        header('Location: ' . app_url('views/candidate/registration.php') . '?message=' . rawurlencode($message));
-        exit;
+        if (!$validElection || !$validPosition || $alreadyApplied) {
+            $message = 'Please select a valid upcoming election and position. You can only submit once for each election.';
+        } else {
+            $partyValue = $partyId > 0 ? $partyId : null;
+            if ($partyValue !== null) {
+                $stmt = $pdo->prepare("
+                    SELECT 1
+                    FROM election_parties
+                    WHERE election_id = ? AND party_id = ?
+                ");
+                $stmt->execute([$electionId, $partyValue]);
+                if (!$stmt->fetchColumn()) {
+                    $message = 'Please select a party that belongs to this election, or leave the party empty.';
+                }
+            }
+            if ($message === '') {
+            $stmt = $pdo->prepare("
+                INSERT INTO applications
+                (user_id, address, city, state, country, postal_code, election_id, position_id,
+                 constituency_area, party_id, qualifications, experience, manifesto)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+            $stmt->execute([
+                $userId,
+                trim($_POST['address'] ?? ''),
+                trim($_POST['city'] ?? ''),
+                trim($_POST['province'] ?? ''),
+                trim($_POST['country'] ?? ''),
+                trim($_POST['postal_code'] ?? ''),
+                $electionId,
+                $positionId,
+                trim($_POST['constituency'] ?? ''),
+                $partyValue,
+                trim($_POST['qualification'] ?? ''),
+                trim($_POST['experience'] ?? ''),
+                trim($_POST['manifesto'] ?? '')
+            ]);
+            header('Location: ' . app_url('views/candidate/registration.php') . '?message=' . rawurlencode('Application submitted successfully.'));
+            exit;
+            }
+        }
     }
 }
 
 ?>
 <?php
 $portalRole = 'candidate';
-$pageTitle = $candidate ? 'Submitted Application' : 'Candidate Registration';
-$pageDescription = $candidate
-    ? 'Review the details you submitted for your candidacy.'
+$pageTitle = $applications ? 'Submitted Applications' : 'Candidate Registration';
+$pageDescription = $applications
+    ? 'Review the applications you submitted for elections.'
     : 'Complete the information required for your candidate application.';
 ?>
 <!DOCTYPE html>
@@ -111,18 +150,30 @@ $pageDescription = $candidate
             <?php include APP_ROOT . '/includes/candidate/candidate_header.php'; ?>
             <main class="min-w-0 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
 
-                <?php
+                <?php if (!empty($message)): ?>
+                    <div class="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-800">
+                        <?= htmlspecialchars($message, ENT_QUOTES, 'UTF-8') ?>
+                    </div>
+                <?php endif; ?>
 
-                if ($candidate) {
-                    $applicationCandidateId = (int) $candidate['id'];
+                <?php
+                if (!empty($applications)) {
+                    foreach ($applications as $submittedApplication) {
+                    $applicationCandidateId = (int) $submittedApplication['id'];
                     $showReviewActions = false;
                     include APP_ROOT . '/includes/shared/submitted_application.php';
-                } else {
+                    }
+                }
+                if (!$hasActiveApplication && !empty($elections)) {
                     $data;
                     $elections;
                     $positions;
                     $parties;
                     include APP_ROOT . '/includes/candidate/registration_form.php';
+                } elseif (!$hasActiveApplication && empty($elections)) {
+                    echo '<div class="mx-auto max-w-5xl rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600 shadow-sm">
+                        No upcoming elections are currently available for a new application.
+                    </div>';
                 }
                 ?>
 

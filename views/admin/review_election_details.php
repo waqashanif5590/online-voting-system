@@ -15,7 +15,10 @@ if (!$election) {
 
 $stmt = $pdo->prepare("SELECT * FROM election_parties WHERE election_id=?");
 $stmt->execute([$electionId]);
-$selectedParties = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$selectedParties = array_map(
+    'intval',
+    array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'party_id')
+);
 
 $stmt = $pdo->prepare("SELECT * FROM election_positions WHERE election_id=?");
 $stmt->execute([$electionId]);
@@ -38,8 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $status = $_POST['status'];
     $electionId = $_POST['election_id'];
 
-    $positions = $_POST['positions'];
-    $parties = $_POST['parties'];
+    $positions = $_POST['positions'] ?? [];
+    $parties = $_POST['parties'] ?? [];
 
     $stmt = $pdo->prepare("UPDATE elections SET title=?, description=?, start_date=?, end_date=?, status=? WHERE id=?");
     $update = $stmt->execute([$title, $description, $start_date, $end_date, $status, $electionId]);
@@ -124,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <div class="relative">
                                 <label class="mb-2 block text-sm font-semibold text-slate-700">
                                     Select parties to add
-                                    <span class="text-rose-600">*</span>
+                                    <span class="text-slate-400">(Optional)</span>
                                 </label>
 
                                 <!-- Dropdown button -->
@@ -169,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 </div>
 
                                 <p class="mt-2 text-xs text-slate-500">
-                                    Select one or more parties for this election.
+                                    Leave empty if this election does not use political parties.
                                 </p>
                             </div>
 

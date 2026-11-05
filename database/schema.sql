@@ -86,6 +86,7 @@ CREATE TABLE votes (
    election_id INT NOT NULL,
    application_id INT NOT NULL,
    position_id INT NOT NULL,
+   party_id INT DEFAULT NULL,
    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
    FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
    FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE,
@@ -128,7 +129,7 @@ CREATE TABLE results (
    id INT AUTO_INCREMENT PRIMARY KEY,
    application_id INT NOT NULL,
    election_id INT NOT NULL,
-   party_id INT NOT NULL,
+   party_id INT DEFAULT NULL,
    position_id INT NOT NULL,
    vote_count BIGINT NOT NULL DEFAULT 0,
    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -139,7 +140,7 @@ CREATE TABLE results (
    UNIQUE (application_id, election_id, party_id, position_id)
 )
 
-CREATE TABLE election_summary (
+CREATE TABLE election_summaries (
     id INT AUTO_INCREMENT PRIMARY KEY,
     election_id INT NOT NULL,
     total_votes BIGINT NOT NULL DEFAULT 0,

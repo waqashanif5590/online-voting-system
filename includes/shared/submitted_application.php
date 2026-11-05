@@ -8,6 +8,7 @@ $detailsStmt = $pdo->prepare("
         users.dob,
         users.gender,
         elections.title AS election_name,
+        elections.status AS election_status,
         elections.start_date AS election_start_date,
         elections.end_date AS election_end_date,
         positions.title AS position_name,
@@ -30,6 +31,7 @@ $statusStyles = [
     'rejected' => 'bg-red-100 text-red-700',
 ];
 $statusClass = $statusStyles[$status] ?? 'bg-gray-100 text-gray-700';
+$electionStatus = $application['election_status'] ?? '';
 $submittedAt = !empty($application['created_at'])
     ? date('F j, Y \a\t g:i A', strtotime($application['created_at']))
     : 'Not available';
@@ -42,16 +44,38 @@ $submittedAt = !empty($application['created_at'])
                 <h2 class="text-lg font-bold text-slate-900">Application status</h2>
                 <p class="mt-1 text-sm text-slate-500">Submitted <?= $escape($submittedAt) ?></p>
             </div>
-            <span class="inline-flex rounded-full px-3 py-1.5 text-sm font-semibold <?= $statusClass ?>">
-                <?= $escape(ucfirst($status)) ?>
-            </span>
+            <div class="flex flex-wrap items-center gap-2">
+                <?php if ($electionStatus === 'completed'): ?>
+                    <span class="inline-flex rounded-full bg-slate-800 px-3 py-1.5 text-sm font-semibold text-white">
+                        Election completed
+                    </span>
+                <?php else: ?>
+                    <span class="inline-flex rounded-full px-3 py-1.5 text-sm font-semibold <?= $statusClass ?>">
+                        <?= $escape(ucfirst($status)) ?>
+                    </span>
+                <?php endif; ?>
+            </div>
         </div>
-        <p class="mt-4 text-sm leading-6 text-slate-600">
-            Your application details are read-only after submission. Contact the election administrator if anything needs to be corrected.
-        </p>
+        <div class="mt-4 flex items-center justify-between gap-4">
+            <p class="mt-4 text-sm leading-6 text-slate-600">
+                These application details are read-only after submission.
+            </p>
+            <button type="button"
+                class="application-toggle flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition duration-300 hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700 focus:outline-none focus:ring-4 focus:ring-purple-100"
+                aria-expanded="false"
+                aria-controls="application-data-<?= $applicationCandidateId ?>">
+                <svg class="h-5 w-5 transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
+                </svg>
+                <span class="sr-only">Show application details</span>
+            </button>
+        </div>
     </section>
 
-    <div class="space-y-6">
+    <div id="application-data-<?= $applicationCandidateId ?>"
+        class="application-details max-h-0 overflow-hidden opacity-0 transition-all duration-500 ease-in-out"
+        style="max-height: 0;">
+        <div class="min-h-0 space-y-6">
         <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
             <h2 class="mb-5 text-lg font-bold text-slate-900">Personal information</h2>
             <dl class="grid gap-x-8 gap-y-5 sm:grid-cols-2">
@@ -91,7 +115,7 @@ $submittedAt = !empty($application['created_at'])
                 </div>
                 <div>
                     <dt class="text-sm font-semibold text-slate-500">Party</dt>
-                    <dd class="mt-1 text-sm text-slate-800"><?= $escape($application['party_name'] ?? 'Independent / not specified') ?></dd>
+                    <dd class="mt-1 text-sm text-slate-800"><?= $escape($application['party_name'] ?? 'Independent / no party') ?></dd>
                 </div>
                 <div>
                     <dt class="text-sm font-semibold text-slate-500">Constituency</dt>
@@ -153,6 +177,7 @@ $submittedAt = !empty($application['created_at'])
                 </div>
             </dl>
         </section>
+        </div>
     </div>
     <?php if (!empty($showReviewActions)): ?>
         <section class="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -165,7 +190,12 @@ $submittedAt = !empty($application['created_at'])
                 the requirements are not met.
             </p>
 
-            <?php if ($status === 'pending'): ?>
+            <?php if ($electionStatus === 'completed'): ?>
+                <p class="mt-4 text-sm font-semibold text-slate-700">Election completed. This application can no longer be reviewed.</p>
+                <?php if ($status !== 'pending'): ?>
+                    <p class="mt-1 text-sm text-slate-500">Review status: <?= $escape(ucfirst($status)) ?>.</p>
+                <?php endif; ?>
+            <?php elseif ($status === 'pending'): ?>
                 <div class="mt-5 flex flex-wrap gap-3">
                     <a href="../../app/controllers/actions.php?candidate=<?= $applicationCandidateId ?>&approve=true&csrf_token=<?= urlencode(getCsrfToken()) ?>"
                         class="rounded-lg bg-green-50 px-2.5 py-1.5 text-xs font-bold text-green-700">Approve</a>
@@ -176,6 +206,13 @@ $submittedAt = !empty($application['created_at'])
                 <p class="mt-4 text-sm font-semibold text-slate-600">
                     This application has already been reviewed.
                 </p>
+            <?php endif; ?>
+            <?php if ($electionStatus === 'completed'): ?>
+                <a href="../../app/controllers/actions.php?delete_application=<?= $applicationCandidateId ?>&csrf_token=<?= urlencode(getCsrfToken()) ?>"
+                    onclick="return confirm('Delete this completed election application?');"
+                    class="mt-5 inline-flex rounded-lg bg-red-100 px-3 py-2 text-sm font-bold text-red-700 hover:bg-red-200">
+                    Delete application
+                </a>
             <?php endif; ?>
         </section>
     <?php endif; ?>

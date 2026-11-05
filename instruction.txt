@@ -1,0 +1,1 @@
+first there is no method to handle the case when an election has no party, if there is situation when admin want to add only election seats/positions but not want to add any party, then it should store that election in database, and candidate should also be able to apply for that election without selecting any party. write code to handle this case.

@@ -13,8 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $end_date = $_POST['end_date'];
     $status = $_POST['status'];
 
-    $positions = $_POST['positions'];
-    $parties = $_POST['parties'];
+    $positions = $_POST['positions'] ?? [];
+    $parties = $_POST['parties'] ?? [];
 
     $stmt = $pdo->prepare("INSERT INTO elections (title, description, start_date, end_date, status) VALUES
     (?,?,?,?,?)");
@@ -120,7 +120,7 @@ $positions = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <div class="relative">
                                 <label class="mb-2 block text-sm font-semibold text-slate-700">
                                     Select parties to add
-                                    <span class="text-rose-600">*</span>
+                                    <span class="text-slate-400">(Optional)</span>
                                 </label>
 
                                 <!-- Dropdown button -->
@@ -164,7 +164,7 @@ $positions = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 </div>
 
                                 <p class="mt-2 text-xs text-slate-500">
-                                    Select one or more parties for this election.
+                                    Leave empty if this election does not use political parties.
                                 </p>
                             </div>
 

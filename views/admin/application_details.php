@@ -43,6 +43,7 @@ $candidateId = filter_input(INPUT_GET, 'candidate', FILTER_VALIDATE_INT);
     <footer class="border-t border-slate-200 bg-white px-5 py-6 text-center text-sm text-slate-500">
         &copy; <span id="year"></span> Online Voting System. All rights reserved.
     </footer>
+    <script src="<?= htmlspecialchars(app_url('public/js/candidate-registration.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
 
 </body>
 

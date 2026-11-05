@@ -29,13 +29,13 @@ $stmt = $pdo->prepare("SELECT r.application_id,
     a.user_id,
     u.name AS candidate_name,
     p.title AS position_title,
-    pa.name AS party_name,
+    COALESCE(pa.name, 'Independent / no party') AS party_name,
     pa.symbol AS party_symbol
     FROM results r
     JOIN applications a ON r.application_id = a.id
     JOIN users u ON a.user_id = u.id
     JOIN positions p ON r.position_id = p.id
-    JOIN parties pa ON r.party_id = pa.id
+    LEFT JOIN parties pa ON r.party_id = pa.id
     WHERE r.election_id = :election_id
     ORDER BY p.id, r.vote_count DESC
 ");
@@ -55,8 +55,8 @@ foreach ($candidates as $candidate) {
     $resultsByPosition[$positionId]['candidates'][] = $candidate;
     $resultsByPosition[$positionId]['total_votes'] += $candidate['vote_count'];
 }
-// Election totals are stored in election_summary after the election is completed.
-$stmt = $pdo->prepare("SELECT * FROM election_summary WHERE election_id=:election_id LIMIT 1");
+// Election totals are stored in election_summaries after the election is completed.
+$stmt = $pdo->prepare("SELECT * FROM election_summaries WHERE election_id=:election_id LIMIT 1");
 $stmt->execute(['election_id' => $electionId]);
 $summary = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -64,6 +64,7 @@ $totalVotesCast = $summary ? (int) $summary['total_votes'] : 0;
 $totalVoters = $summary ? (int) $summary['total_voters'] : 0;
 $totalCandidates = $summary ? (int) $summary['total_candidates'] : 0;
 $rejectedVotes = $summary ? (int) $summary['rejected_votes'] : 0;
+$validVotes = $totalVotesCast - $rejectedVotes;
 $totalParticipatedVoters = max(0, $totalVoters - $rejectedVotes);
 $voterTurnoutPercentage = $totalVoters > 0 ? ($totalParticipatedVoters / $totalVoters) * 100 : 0;
 
@@ -99,7 +100,7 @@ $totalPositions = $stmt->fetch(PDO::FETCH_ASSOC)['total_positions'] ?? 0;
                             </svg>
                             Back to Elections
                         </a>
-                        <button type="button" class="inline-flex items-center gap-2 rounded-xl bg-purple-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-800" aria-label="Print results (placeholder)">
+                        <button type="button" onclick="window.print()" class="inline-flex items-center gap-2 rounded-xl bg-purple-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-purple-800" aria-label="Print results (placeholder)">
                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M7 8V3h10v5M7 17H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M7 14h10v7H7z" />
                             </svg>
@@ -191,7 +192,7 @@ $totalPositions = $stmt->fetch(PDO::FETCH_ASSOC)['total_positions'] ?? 0;
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5 2a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z" />
                                     </svg></span>
                             </div>
-                            <p class="mt-4 text-3xl font-bold tracking-tight text-slate-900"><?= number_format($totalVotesCast) ?></p>
+                            <p class="mt-4 text-3xl font-bold tracking-tight text-slate-900"><?= number_format($validVotes) ?></p>
                             <p class="mt-2 text-xs text-slate-500"><?= number_format($rejectedVotes) ?> rejected or unanswered ballots</p>
                         </article>
                     </section>
@@ -442,11 +443,11 @@ $totalPositions = $stmt->fetch(PDO::FETCH_ASSOC)['total_positions'] ?? 0;
                                 </div>
                                 <div class="rounded-xl bg-green-50 p-4">
                                     <p class="text-sm text-green-700">Valid ballots</p>
-                                    <p class="mt-2 text-2xl font-bold text-green-800">982</p>
+                                    <p class="mt-2 text-2xl font-bold text-green-800"><?= number_format($validVotes) ?></p>
                                 </div>
                                 <div class="rounded-xl bg-orange-50 p-4">
                                     <p class="text-sm text-orange-700">Invalid / rejected</p>
-                                    <p class="mt-2 text-2xl font-bold text-orange-800">18</p>
+                                    <p class="mt-2 text-2xl font-bold text-orange-800"><?= number_format($rejectedVotes) ?></p>
                                 </div>
                             </div>
                             <div class="mt-5">
@@ -458,7 +459,7 @@ $totalPositions = $stmt->fetch(PDO::FETCH_ASSOC)['total_positions'] ?? 0;
                                 <p class="mt-2 text-xs text-slate-500">250 registered voters did not cast a ballot.</p>
                             </div>
                         </article>
-                       
+
                     </section>
 
                     <!-- Official notice -->

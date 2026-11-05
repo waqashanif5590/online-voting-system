@@ -64,10 +64,10 @@ if (isset($_GET['election'])) {
         }
 
         // Save the final totals once, then remove duplicate old summaries.
-        $stmt = $pdo->prepare("DELETE FROM election_summary WHERE election_id=?");
+        $stmt = $pdo->prepare("DELETE FROM election_summaries WHERE election_id=?");
         $stmt->execute([$electionId]);
 
-        $stmt = $pdo->prepare("INSERT INTO election_summary
+        $stmt = $pdo->prepare("INSERT INTO election_summaries
         (election_id, total_votes, total_candidates, total_voters, rejected_votes)
         VALUES (?, ?, ?, ?, ?)");
         $stmt->execute([
