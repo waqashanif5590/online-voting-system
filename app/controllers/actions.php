@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../../app/paths.php';
 require_once APP_ROOT . '/app/helpers/security.php';
+require_once APP_ROOT . '/includes/shared/alert.php';
 require_once APP_ROOT . '/app/config/database.php';
 requireRole('admin');
 checkCsrfToken();
@@ -17,6 +18,9 @@ if (isset($_GET['delete_application'])) {
     if ($electionStatus === 'completed') {
         $stmt = $pdo->prepare("DELETE FROM applications WHERE id = ?");
         $stmt->execute([$applicationId]);
+        setFlashAlert('Application deleted successfully.', 'success');
+    } else {
+        setFlashAlert('The application can only be deleted after its election is completed.', 'error');
     }
     header('Location: ' . app_url('views/admin/candidates.php'));
     exit();
@@ -32,15 +36,18 @@ if (isset($_GET['approve'], $_GET['candidate'])) {
     $stmt->execute([$candidateId]);
     $electionStatus = $stmt->fetchColumn();
     if ($electionStatus === false || $electionStatus === 'completed') {
+        setFlashAlert('This application cannot be updated.', 'error');
         header('Location: ' . app_url('views/admin/candidates.php'));
         exit();
     }
     if ($_GET['approve'] === 'true') {
         $stmt = $pdo->prepare("UPDATE applications SET status=? WHERE id=?");
         $stmt->execute(['approved', $candidateId]);
+        setFlashAlert('Application approved successfully.', 'success');
     } else if ($_GET['approve'] === 'false') {
         $stmt = $pdo->prepare("UPDATE applications SET status=? WHERE id=?");
         $stmt->execute(['rejected', $candidateId]);
+        setFlashAlert('Application rejected.', 'warning');
     }
     header('Location: ' . app_url('views/admin/candidates.php'));
     exit();
@@ -57,9 +64,11 @@ if (isset($_GET['voter'])) {
     if ($voter['status'] == true) {
         $stmt = $pdo->prepare("UPDATE users SET status=? WHERE id=?");
         $stmt->execute([0, $_GET['voter']]);
+        setFlashAlert('Voter status updated successfully.', 'success');
     } else if ($voter['status'] == false) {
         $stmt = $pdo->prepare("UPDATE users SET status=? WHERE id=?");
         $stmt->execute([1, $_GET['voter']]);
+        setFlashAlert('Voter status updated successfully.', 'success');
     }
     header('Location: ' . app_url('views/admin/voters.php'));
     exit();

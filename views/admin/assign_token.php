@@ -3,7 +3,9 @@ require_once __DIR__ . '/../../app/paths.php';
 session_start();
 require_once APP_ROOT . '/app/config/database.php';
 require_once APP_ROOT . '/app/helpers/security.php';
+require_once APP_ROOT . '/includes/shared/alert.php';
 requireRole('admin');
+$tokenAlert = '';
 if (isset($_GET['user'])) {
     $stmt = $pdo->prepare("SELECT * FROM users WHERE id=?");
     $stmt->execute([$_GET['user']]);
@@ -38,12 +40,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt->execute([$voter, $election]);
     $assigned_token = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($assigned_token) {
-        echo "<script>alert('Token already assigned')</script>";
+        $tokenAlert = 'This voter already has a token for the selected election.';
     } else {
         $stmt = $pdo->prepare("INSERT INTO voters (user_id, token, election_id) VALUES (?,?,?)");
         $insertion = $stmt->execute([$voter, $token, $election]);
         if ($insertion) {
+            setFlashAlert('Voting token assigned successfully.', 'success');
             header('Location: ' . app_url('views/admin/voters.php'));
+            exit;
         }
     }
 }
@@ -61,6 +65,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
+    <div class="site-alert-container" aria-label="Notifications">
+        <?php if ($tokenAlert !== '') { renderAlert($tokenAlert, 'error'); } ?>
+    </div>
+    <script src="<?= htmlspecialchars(app_url('public/js/alert.js'), ENT_QUOTES, 'UTF-8') ?>" defer></script>
     <div class="flex min-h-screen flex-col md:flex-row">
         <?php $portalRole = 'admin';
         include APP_ROOT . '/includes/shared/portal_sidebar.php'; ?>

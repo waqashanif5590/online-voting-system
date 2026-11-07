@@ -13,6 +13,9 @@ foreach (preg_split('/\s+/', trim($headerName)) as $namePart) {
 }
 $headerInitials = substr($headerInitials, 0, 2);
 ?>
+<?php
+require_once __DIR__ . '/alert.php';
+?>
 <header class="border-b border-slate-200 bg-white">
     <div class="flex flex-col justify-between gap-4 px-5 py-5 sm:flex-row sm:items-center sm:px-8 lg:px-10">
         <div>
@@ -30,3 +33,7 @@ $headerInitials = substr($headerInitials, 0, 2);
         </div>
     </div>
 </header>
+<div class="site-alert-container" aria-label="Notifications">
+    <?php renderFlashAlert(); ?>
+</div>
+<script src="<?= htmlspecialchars(app_url('public/js/alert.js'), ENT_QUOTES, 'UTF-8') ?>" defer></script>

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../../app/paths.php';
 session_start();
 require_once APP_ROOT . '/app/helpers/security.php';
+require_once APP_ROOT . '/includes/shared/alert.php';
 requireRole('candidate');
 
 if (empty($_SESSION['login']) || $_SESSION['login'] !== true || empty($_SESSION['user_id'])) {
@@ -26,7 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     );
     $stmt->execute([$username, $email, $identityType, $identityNumber, $dob, $gender, $_SESSION['user_id']]);
 
-    header('Location: ' . app_url('views/candidate/profile.php?success=1'));
+    setFlashAlert('Profile updated successfully.', 'success');
+    header('Location: ' . app_url('views/candidate/profile.php'));
     exit();
 }
 

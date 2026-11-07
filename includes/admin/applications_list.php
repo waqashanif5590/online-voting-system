@@ -51,7 +51,7 @@
                 foreach ($candidates as $key => $candidate) {
                     $electionStatusLabel = $candidate['election_status'] === 'completed'
                         ? 'Election Completed'
-                        : ucfirst($candidate['election_status']);
+                        : ucfirst($candidate['status']);
                     echo ' <tr>
                                     <td class="px-6 py-4 font-semibold text-slate-800">' . cleanText((string) $candidate['username']) . '</td>
                                     <td class="px-6 py-4 text-slate-600">' . cleanText((string) $candidate['election']) . '</td>

@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../app/paths.php';
 session_start();
 require_once APP_ROOT . '/app/config/database.php';
 require_once APP_ROOT . '/app/helpers/security.php';
+require_once APP_ROOT . '/includes/shared/alert.php';
 requireRole('candidate');
 
 $userId = (int) $_SESSION['user_id'];
@@ -116,7 +117,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 trim($_POST['experience'] ?? ''),
                 trim($_POST['manifesto'] ?? '')
             ]);
-            header('Location: ' . app_url('views/candidate/registration.php') . '?message=' . rawurlencode('Application submitted successfully.'));
+            setFlashAlert('Application submitted successfully.', 'success');
+            header('Location: ' . app_url('views/candidate/registration.php'));
             exit;
             }
         }
@@ -151,8 +153,8 @@ $pageDescription = $applications
             <main class="min-w-0 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
 
                 <?php if (!empty($message)): ?>
-                    <div class="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-800">
-                        <?= htmlspecialchars($message, ENT_QUOTES, 'UTF-8') ?>
+                    <div class="site-alert-container" aria-label="Notifications">
+                        <?php renderAlert($message, 'error'); ?>
                     </div>
                 <?php endif; ?>
 

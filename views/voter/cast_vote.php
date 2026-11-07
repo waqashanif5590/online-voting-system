@@ -207,6 +207,7 @@ $pageDescription = 'Review the candidates and securely submit your choice for th
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
+    <script src="<?= htmlspecialchars(app_url('public/js/alert.js'), ENT_QUOTES, 'UTF-8') ?>"></script>
     <div class="flex min-h-screen flex-col md:flex-row">
         <?php include_once APP_ROOT . '/includes/voter/voter_sidebar.php' ?>
         <div class="min-w-0 flex-1">
@@ -538,7 +539,9 @@ $pageDescription = 'Review the candidates and securely submit your choice for th
                     const token = prompt("Enter your token number to cast vote");
 
                     if (token === null || token.trim() === "") {
-                        alert("Token is required");
+                        if (window.showAlert) {
+                            window.showAlert("Please enter your voting token.", "error");
+                        }
                         return;
                     }
 

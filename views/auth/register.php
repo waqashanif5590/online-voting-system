@@ -2,6 +2,9 @@
 require_once __DIR__ . '/../../app/paths.php';
 require_once APP_ROOT . '/app/config/database.php';
 require_once APP_ROOT . '/app/helpers/security.php';
+require_once APP_ROOT . '/includes/shared/alert.php';
+
+$registrationError = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     checkCsrfToken();
@@ -16,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($role !== 'voter' && $role !== 'candidate') {
         $role = '';
-        echo 'Please choose a valid account role.';
+        $registrationError = 'Please choose a valid account role.';
     } else {
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
@@ -26,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_email = $email_stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($user_email) {
-        echo "Email already exists.";
+        $registrationError = 'An account with this email already exists.';
     } else {
         $stmt = $pdo->prepare("INSERT INTO users (name, email, identity_type, identity_number, dob, gender, password, role) VALUES (?,?,?,?,?,?,?,?)");
         $stmt->execute([
@@ -39,6 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $hashed_password,
             $role
         ]);
+        setFlashAlert('Account created successfully. You can now log in.', 'success');
         header('Location: ' . app_url('views/auth/login.php'));
         exit();
     }
@@ -58,6 +62,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-800">
+    <div class="site-alert-container" aria-label="Notifications">
+        <?php if ($registrationError !== '') { renderAlert($registrationError, 'error'); } ?>
+    </div>
+    <script src="<?= htmlspecialchars(app_url('public/js/alert.js'), ENT_QUOTES, 'UTF-8') ?>" defer></script>
 
     <!-- Header -->
     <header class="border-b border-slate-200 bg-white">

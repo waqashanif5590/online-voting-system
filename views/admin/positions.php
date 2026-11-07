@@ -79,9 +79,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $stmt = $pdo->query("SELECT id, title, description FROM positions ORDER BY created_at DESC");
 $positions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$message = $_SESSION['message'] ?? '';
-$messageType = $_SESSION['message_type'] ?? '';
-unset($_SESSION['message'], $_SESSION['message_type']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -104,11 +101,6 @@ unset($_SESSION['message'], $_SESSION['message_type']);
             ?>
             <main id="dashboard" class="min-w-0 flex-1">
                 <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-                    <?php if ($message !== '') : ?>
-                        <div class="mb-4 rounded-xl border px-4 py-3 text-sm <?= $messageType === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700' ?>">
-                            <?= htmlspecialchars($message, ENT_QUOTES, 'UTF-8') ?>
-                        </div>
-                    <?php endif; ?>
                     <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                         <div class="flex flex-col justify-between gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:px-6">
                             <div>

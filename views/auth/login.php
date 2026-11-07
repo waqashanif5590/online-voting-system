@@ -2,6 +2,9 @@
 require_once __DIR__ . '/../../app/paths.php';
 require_once APP_ROOT . '/app/config/database.php';
 require_once APP_ROOT . '/app/helpers/security.php';
+require_once APP_ROOT . '/includes/shared/alert.php';
+
+$loginError = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     checkCsrfToken();
@@ -12,9 +15,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute([$email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($user == null) {
-        echo 'Account not found, please register first.';
+        $loginError = 'Account not found. Please register first.';
     } else if ($user['status'] == false) {
-        echo 'Account is blocked, please contact administrator';
+        $loginError = 'Your account is blocked. Please contact the administrator.';
     } else {
         if (password_verify($password, $user['password'])) {
             session_start();
@@ -25,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['user_role'] = $user['role'];
             $_SESSION['status'] = $user['status'];
+            setFlashAlert('You are logged in successfully. Welcome back!', 'success');
             if ($user['role'] === 'voter') {
                 header('Location: ' . app_url('views/voter/dashboard.php'));
                 exit;
@@ -36,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
         } else {
-            echo 'incorrect username or password';
+            $loginError = 'Incorrect email address or password.';
         }
     }
 }
@@ -54,6 +58,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-800">
+    <div class="site-alert-container" aria-label="Notifications">
+        <?php renderFlashAlert(); ?>
+        <?php if ($loginError !== '') { renderAlert($loginError, 'error'); } ?>
+    </div>
+    <script src="<?= htmlspecialchars(app_url('public/js/alert.js'), ENT_QUOTES, 'UTF-8') ?>" defer></script>
 
     <!-- Header -->
     <header class="border-b border-slate-200 bg-white">
