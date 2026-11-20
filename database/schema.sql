@@ -66,7 +66,8 @@ CREATE TABLE applications (
     FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
     FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE CASCADE,
     FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE SET NULL,
-    UNIQUE (user_id, election_id, position_id)
+    UNIQUE (user_id, election_id, position_id),
+    INDEX idx_applications_election_status (election_id, status)
 );
 
 CREATE TABLE voters (
@@ -92,7 +93,8 @@ CREATE TABLE votes (
    FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
    FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE,
    FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE CASCADE,
-   FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE SET NULL
+   FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE SET NULL,
+   INDEX idx_votes_election_position (election_id, position_id)
 );
 
 CREATE TABLE voter_participation (
@@ -139,7 +141,7 @@ CREATE TABLE results (
    FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
    FOREIGN KEY (party_id) REFERENCES parties(id) ON DELETE CASCADE,
    FOREIGN KEY (position_id) REFERENCES positions(id) ON DELETE CASCADE,
-   UNIQUE (application_id)
+   UNIQUE KEY uq_results_application (application_id)
 );
 
 CREATE TABLE election_summaries (
@@ -150,6 +152,6 @@ CREATE TABLE election_summaries (
     total_voters BIGINT NOT NULL DEFAULT 0,
     rejected_votes BIGINT NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (election_id),
+    UNIQUE KEY uq_summary_election (election_id),
     FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE
 );
