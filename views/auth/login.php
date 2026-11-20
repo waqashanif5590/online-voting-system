@@ -5,9 +5,11 @@ require_once APP_ROOT . '/app/helpers/security.php';
 require_once APP_ROOT . '/includes/shared/alert.php';
 
 $loginError = '';
+$loginEmail = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     checkCsrfToken();
+    $loginEmail = is_string($_POST['email'] ?? null) ? $_POST['email'] : '';
     $email = strtolower(trim($_POST['email'] ?? ''));
     $password = $_POST['password'] ?? '';
 
@@ -161,6 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input type="email" id="email" name="email"
                                 placeholder="Enter your registered email"
                                 autocomplete="email" maxlength="254"
+                                value="<?= htmlspecialchars($loginEmail, ENT_QUOTES, 'UTF-8') ?>"
                                 class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-purple-600 focus:ring-4 focus:ring-purple-100">
                         </div>
 

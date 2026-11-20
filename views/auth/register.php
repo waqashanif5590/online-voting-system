@@ -5,9 +5,24 @@ require_once APP_ROOT . '/app/helpers/security.php';
 require_once APP_ROOT . '/includes/shared/alert.php';
 
 $registrationError = '';
+$formValues = [
+    'name' => '',
+    'identity_type' => 'cnic',
+    'identity_number' => '',
+    'dob' => '',
+    'gender' => '',
+    'email' => '',
+    'role' => 'voter',
+];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     checkCsrfToken();
+    foreach (array_keys($formValues) as $field) {
+        if (is_string($_POST[$field] ?? null)) {
+            $formValues[$field] = $_POST[$field];
+        }
+    }
+
     $name = trim($_POST['name'] ?? '');
     $email = strtolower(trim($_POST['email'] ?? ''));
     $identity_type = $_POST['identity_type'] ?? '';
@@ -233,6 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input type="text" id="name" name="name"
                                 placeholder="Enter your full name"
                                 autocomplete="name" minlength="2" maxlength="50"
+                                value="<?= htmlspecialchars($formValues['name'], ENT_QUOTES, 'UTF-8') ?>"
                                 class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-purple-600 focus:ring-4 focus:ring-purple-100">
                         </div>
 
@@ -245,13 +261,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="grid gap-3 sm:grid-cols-3">
                                 <select id="identityType" name="identity_type"
                                     class="rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-100">
-                                    <option value="cnic">CNIC</option>
-                                    <option value="passport">Passport</option>
+                                    <option value="cnic" <?= $formValues['identity_type'] === 'cnic' ? 'selected' : '' ?>>CNIC</option>
+                                    <option value="passport" <?= $formValues['identity_type'] === 'passport' ? 'selected' : '' ?>>Passport</option>
                                 </select>
 
                                 <input type="text" id="identityNumber" name="identity_number"
                                     placeholder="Identity number"
                                     maxlength="13" autocomplete="off"
+                                    value="<?= htmlspecialchars($formValues['identity_number'], ENT_QUOTES, 'UTF-8') ?>"
                                     class="sm:col-span-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-purple-600 focus:ring-4 focus:ring-purple-100">
                             </div>
 
@@ -267,6 +284,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </label>
 
                             <input type="date" id="dob" name="dob"
+                                value="<?= htmlspecialchars($formValues['dob'], ENT_QUOTES, 'UTF-8') ?>"
 
                                 class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-purple-600 focus:ring-4 focus:ring-purple-100">
                         </div>
@@ -279,10 +297,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <select id="gender" name="gender"
 
                                 class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-purple-600 focus:ring-4 focus:ring-purple-100">
-                                <option value="">Select Gender</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                                <option value="other">Other</option>
+                                <option value="" <?= $formValues['gender'] === '' ? 'selected' : '' ?>>Select Gender</option>
+                                <option value="male" <?= $formValues['gender'] === 'male' ? 'selected' : '' ?>>Male</option>
+                                <option value="female" <?= $formValues['gender'] === 'female' ? 'selected' : '' ?>>Female</option>
+                                <option value="other" <?= $formValues['gender'] === 'other' ? 'selected' : '' ?>>Other</option>
                             </select>
                         </div>
 
@@ -295,6 +313,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input type="email" id="email" name="email"
                                 placeholder="you@example.com"
                                 autocomplete="email" maxlength="254"
+                                value="<?= htmlspecialchars($formValues['email'], ENT_QUOTES, 'UTF-8') ?>"
                                 class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-purple-600 focus:ring-4 focus:ring-purple-100">
                         </div>
 
@@ -332,7 +351,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                 <label class="relative cursor-pointer">
                                     <input type="radio" name="role" value="voter"
-                                        class="peer sr-only" checked>
+                                        class="peer sr-only" <?= $formValues['role'] === 'voter' ? 'checked' : '' ?>>
 
                                     <div class="flex h-full items-start gap-3 rounded-xl border-2 border-slate-200 p-4 transition peer-checked:border-purple-600 peer-checked:bg-purple-50 hover:border-purple-300">
                                         <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-purple-100 text-purple-700">
@@ -352,7 +371,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                 <label class="relative cursor-pointer">
                                     <input type="radio" name="role" value="candidate"
-                                        class="peer sr-only">
+                                        class="peer sr-only" <?= $formValues['role'] === 'candidate' ? 'checked' : '' ?>>
 
                                     <div class="flex h-full items-start gap-3 rounded-xl border-2 border-slate-200 p-4 transition peer-checked:border-orange-500 peer-checked:bg-orange-50 hover:border-orange-300">
                                         <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-orange-600">
